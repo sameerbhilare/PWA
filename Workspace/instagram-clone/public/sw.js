@@ -13,6 +13,10 @@
     Here we don't have access to DOM events as service workers don't have access to DOM itself.
 */
 
+// ======================================================
+// LIFE CYCLE EVENTS
+// ======================================================
+
 // 'install' event when browser installs the service worker.
 self.addEventListener('install', (event) => {
   console.log('[Service Worker] Installing Service Worker ...', event);
@@ -28,4 +32,30 @@ self.addEventListener('activate', (event) => {
     Adding this line simply makes it more robust, might not be needed in the future.
   */
   return self.clients.claim();
+});
+
+// ======================================================
+// NON-LIFE CYCLE EVENTS
+// ======================================================
+// 'fetch' event will get triggered whenever our web application fetches something.
+/* 
+    fetch event will be emitted when the HTML pages for example load assets like the scripts 
+    or like our CSS code through links or when they load an image thru <img> tag.
+    It will also trigger if we manually send a fetch request in the app.js file.
+*/
+self.addEventListener('fetch', (event) => {
+  console.log('[Service Worker] Fetching something ...', event);
+
+  /*
+    Every outgoing fetch request goes through the service worker and so does every response.
+    event.respondWith() allows us to overwrite the data which gets sent back. Basically, we intercept the fetch request from browser.
+    We intercept this request and can return different things depending on whether we have online access,
+    if we have internet access or not. We'll then use respondWith to simply check the internet connection 
+    basically and return stuff from our cache or from the network.
+  */
+
+  // event.respondWith(null); // don't do anything.Reload your app to see the behavior.
+
+  // this line as same as not having this line :) bcz this is what browser will anyway do, i.e. fetch the requested asset
+  event.respondWith(fetch(event.request));
 });
