@@ -1,3 +1,8 @@
+// check if browser supports Promise, if not then use promise.js polyfill
+if (!window.Promise) {
+  window.Promise = Promise; // this 'Promise' is from promise.js polyfill
+}
+
 /*
     Check if the browser supports Service worker. 
     navigator is simply your browser.
