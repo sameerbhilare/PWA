@@ -36,6 +36,8 @@ window.addEventListener('beforeinstallprompt', (event) => {
   // Prevent the mini-infobar from appearing on mobile
   event.preventDefault();
   // Stash the event so it can be triggered later.
+  // we are using this stashed event 'deferredPrompt' in the feed.js openCreatePostModal() function
+  // as we want to show the Install Banner on click of  Add Post (+) button on main page.
   deferredPrompt = event;
   // don't do anything.
   return false;
