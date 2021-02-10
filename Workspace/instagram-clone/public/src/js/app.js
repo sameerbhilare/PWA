@@ -35,3 +35,80 @@ window.addEventListener('beforeinstallprompt', (event) => {
   // don't do anything.
   return false;
 });
+
+// ===========================
+// creating promise
+var promise = new Promise((resolve, reject) => {
+  setTimeout(() => {
+    if (true) {
+      // make it false to test 'reject' flow
+      resolve('equal');
+    } else {
+      reject('not equal');
+    }
+  }, 2000);
+});
+
+// consuming promise
+promise
+  .then((result) => {
+    console.log('Promise', result);
+  })
+  .catch((err) => console.log('Promise', err));
+
+// ===========================
+// using fetch to GET
+fetch('http://httpbin.org/ip')
+  .then((response) => {
+    console.log(response);
+    // It is an asynchronous operation though because it gets a readable stream
+    return response.json();
+  })
+  .then((data) => {
+    console.log('fetch', data);
+  })
+  .catch((err) => {
+    console.log('fetch', err);
+  });
+
+// ===========================
+// using fetch to POST
+fetch('http://httpbin.org/post', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+  },
+  mode: 'cors', // response has to include the cors headers
+  body: JSON.stringify({
+    // since we are setting content type to json, we need to stringigy this JS object
+    message: 'This is test message',
+  }),
+})
+  .then((response) => {
+    console.log('fetch', response);
+    // It is an asynchronous operation though because it gets a readable stream
+    return response.json();
+  })
+  .then((data) => {
+    console.log('fetch', data);
+  })
+  .catch((err) => {
+    console.log('fetch', err);
+  });
+
+// ===========================
+// using AJAX
+var xhr = new XMLHttpRequest();
+xhr.open('GET', 'http://httpbin.org/ip');
+xhr.responseType = 'json';
+
+xhr.onload = function () {
+  console.log('ajax', xhr.response);
+};
+
+xhr.onerror = function () {
+  console.log('ajax error');
+};
+
+xhr.send();
