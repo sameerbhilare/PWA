@@ -41,6 +41,7 @@ window.addEventListener('beforeinstallprompt', (event) => {
   return false;
 });
 
+/*
 // ===========================
 // creating promise
 var promise = new Promise((resolve, reject) => {
@@ -117,3 +118,4 @@ xhr.onerror = function () {
 };
 
 xhr.send();
+*/
