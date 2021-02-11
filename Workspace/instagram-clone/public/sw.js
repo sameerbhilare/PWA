@@ -20,6 +20,30 @@
 // 'install' event when browser installs the service worker.
 self.addEventListener('install', (event) => {
   console.log('[Service Worker] Installing Service Worker ...', event);
+
+  // During 'install' event, we should be precaching the App Shell i.e. the static content.
+  /*
+    If it already exists, it will open it.
+    If you try to open a cache which does not exist yet, it will create it.
+    event.waitUntil() waits until caches.open (which returns a promise) is finished.
+
+    Why should we use event.waitUntil()? 
+    Remember in a service worker, we work with asynchronous code because it's running in the background 
+    and it's event driven. Therefore the install event doesn't wait for cache.open to finish by default 
+    (as it returns promise). It would just see install event, trigger this operation and continue.
+    And this can lead to huge problems because once the service worker installation finishes, 
+    you might have a fetch listener, you do fetch a resource and you try to get it from the cache 
+    even though your caching operation hasn't finished yet. 
+    So this can lead to problem. Hence use event.waitUntil
+  */
+  event.waitUntil(
+    caches.open('static').then((cache) => {
+      // caches.open() returns a reference to the cache so that we can add content/files to this cache
+      console.log('[Service Worker] Precaching App Shell.');
+      // make a request to given file, download it and store it in the cache.
+      cache.add('/src/js/app.js');
+    })
+  );
 });
 
 // 'activate' event when the installed service worker is activated.
