@@ -44,7 +44,7 @@ self.addEventListener('activate', (event) => {
     It will also trigger if we manually send a fetch request in the app.js file.
 */
 self.addEventListener('fetch', (event) => {
-  console.log('[Service Worker] Fetching something ...', event);
+  //console.log('[Service Worker] Fetching something ...', event);
 
   /*
     Every outgoing fetch request goes through the service worker and so does every response.
