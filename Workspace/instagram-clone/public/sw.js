@@ -37,10 +37,11 @@ self.addEventListener('install', (event) => {
     So this can lead to problem. Hence use event.waitUntil
   */
   event.waitUntil(
+    // 'caches' refers to overall Cache Storage
     caches.open('static').then((cache) => {
       // caches.open() returns a reference to the cache so that we can add content/files to this cache
       console.log('[Service Worker] Precaching App Shell.');
-      // make a request to given file, download it and store it in the cache.
+      // make a request to given file, download it and stores both 'request' and 'response' values in the cache.
       cache.add('/src/js/app.js');
     })
   );
@@ -81,5 +82,24 @@ self.addEventListener('fetch', (event) => {
   // event.respondWith(null); // don't do anything.Reload your app to see the behavior.
 
   // this line as same as not having this line :) bcz this is what browser will anyway do, i.e. fetch the requested asset
-  event.respondWith(fetch(event.request));
+  // event.respondWith(fetch(event.request));
+
+  /*
+    In the fetch event listener of the service worker, 
+    make sure we actually fetch the data from our cache if available. 
+  */
+  // match() will have a look for given 'request' at all our sub-caches and see if we find a given resource there.
+  // Note - the key in the cache is always a 'request' not a string.
+  event.respondWith(
+    caches.match(event.request).then((response) => {
+      // if match() doesn't find a match, it resolves. i.e. the 'response' will be null
+      if (response) {
+        // returning value from the cache
+        return response;
+      } else {
+        // if not found in cache, then continue. i.e. make a network request
+        return fetch(event.request);
+      }
+    })
+  );
 });
