@@ -41,7 +41,16 @@ self.addEventListener('install', (event) => {
     caches.open('static').then((cache) => {
       // caches.open() returns a reference to the cache so that we can add content/files to this cache
       console.log('[Service Worker] Precaching App Shell.');
-      // make a request to given file, download it and stores both 'request' and 'response' values in the cache.
+
+      /*
+        Make a request to given file, download it and stores both 'request' and 'response' values in the cache.
+        Think of these as 'requests' not paths. 
+        Just cachig '/index.html' is not enough, we have to also cache '/' 
+        because we enter http://localhost:8080 in the URL which behind the scenes returns index.html page.
+        Hence we must cache the 'request' for '/' in addition to the 'request' for '/index.html'
+      */
+      cache.add('/');
+      cache.add('/index.html');
       cache.add('/src/js/app.js');
     })
   );
