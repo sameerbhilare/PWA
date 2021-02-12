@@ -43,15 +43,46 @@ self.addEventListener('install', (event) => {
       console.log('[Service Worker] Precaching App Shell.');
 
       /*
+        PRE-CACHING / STATIC CACHING -
         Make a request to given file, download it and stores both 'request' and 'response' values in the cache.
         Think of these as 'requests' not paths. 
         Just cachig '/index.html' is not enough, we have to also cache '/' 
         because we enter http://localhost:8080 in the URL which behind the scenes returns index.html page.
         Hence we must cache the 'request' for '/' in addition to the 'request' for '/index.html'
-      */
-      cache.add('/');
-      cache.add('/index.html');
-      cache.add('/src/js/app.js');
+
+        We need the polyfills promise.js and fetch.js for legacy browsers 
+        but those browsers won't support service workers anyways, so there's no value in storing these files.
+        However since these files are also referenced in the index.html, 
+        we can precache those as they will anyway be loaded since they are part of index.html
+
+        We are not pre-caching /html/index.html and /src/css/help.css because we want to cache only bare minimum.
+        We want to store the bare minimum app shell so as to make our first page run.
+
+        For the icons, you don't really need to pre-cache those. 
+        Yes, you won't be able to add it to the homescreen if you don't pre-cache the icons 
+        but that shouldn't be an issue because offline support shouldn't be the permanent state of our application.
+
+        We also need to precache the things we get from CDNs, like the styling package or the fonts 
+        and image icon sets which are referenced in the /index.html.
+        One important restriction though - if you don't want to get an error while fetching from CDNs, 
+        the CDN servers you are pre-caching from should set the CORS headers to allow cross-origin-access to these files.
+        If they don't, this will throw an error.
+        */
+      cache.addAll([
+        '/',
+        '/index.html',
+        '/src/js/app.js',
+        '/src/js/feed.js',
+        '/src/js/material.min.js',
+        '/src/js/promise.js', // not required for browsers supporting SW. See above comment for details.
+        '/src/js/fetch.js', // not required for browsers supporting SW. See above comment for details.
+        '/src/css/app.css',
+        '/src/css/feed.css',
+        '/src/images/main-image.jpg', // only this image because this is the only static image used in /index.html page
+        'https://fonts.googleapis.com/css?family=Roboto:400,700', // CDN Font
+        'https://fonts.googleapis.com/icon?family=Material+Icons', // CDN icons
+        'https://cdnjs.cloudflare.com/ajax/libs/material-design-lite/1.3.0/material.indigo-pink.min.css', // CDN css
+      ]);
     })
   );
 });
