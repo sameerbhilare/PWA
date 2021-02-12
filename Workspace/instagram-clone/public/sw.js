@@ -38,7 +38,7 @@ self.addEventListener('install', (event) => {
   */
   event.waitUntil(
     // 'caches' refers to overall Cache Storage. You can give any name for your static cache.
-    caches.open('static').then((cache) => {
+    caches.open('static-v2').then((cache) => {
       // caches.open() returns a reference to the cache so that we can add content/files to this cache
       console.log('[Service Worker] Precaching App Shell.');
 
@@ -128,9 +128,9 @@ self.addEventListener('fetch', (event) => {
     In the fetch event listener of the service worker, 
     make sure we actually fetch the data from our cache if available. 
   */
-  // match() will have a look for given 'request' at all our sub-caches and see if we find a given resource there.
-  // Note - the key in the cache is always a 'request' not a string.
   event.respondWith(
+    // match() will have a look for given 'request' at ALL our sub-caches and see if we find a given resource there.
+    // Note - the key in the cache is always a 'request' not a string.
     caches.match(event.request).then((cachedResponse) => {
       // if match() doesn't find a match, it resolves. i.e. the 'response' will be null
       if (cachedResponse) {
