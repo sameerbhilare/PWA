@@ -38,7 +38,7 @@ self.addEventListener('install', (event) => {
   */
   event.waitUntil(
     // 'caches' refers to overall Cache Storage. You can give any name for your static cache.
-    caches.open('static-v2').then((cache) => {
+    caches.open('static-v4').then((cache) => {
       // caches.open() returns a reference to the cache so that we can add content/files to this cache
       console.log('[Service Worker] Precaching App Shell.');
 
@@ -90,6 +90,32 @@ self.addEventListener('install', (event) => {
 // 'activate' event when the installed service worker is activated.
 self.addEventListener('activate', (event) => {
   console.log('[Service Worker] Activating Service Worker ...', event);
+
+  /*
+    Old Cache Cleanup.
+    Using event.waitUntil here to again wait until we're done with the clean up before we continue 
+    because we're doing some work on the cache and if we don't wait for this to finish, 
+    we might react to a fetch event and serve that from the old cache which we're about to tear down.
+  */
+  event.waitUntil(
+    // caches.keys() returns keys of all the sub-caches in your cache storage.
+    caches.keys().then((keySet) => {
+      // Promise.all() takes an array of promises and waits for all of them to finish,
+      // so that we only return from this function once we're really done with the cleanup.
+      return Promise.all(
+        // transform this array of strings into an array of promises (to delete given cache).
+        keySet.map((key) => {
+          // we want to delete old caches only.
+          if (key !== 'static-v4' && key !== 'dynamic') {
+            console.log('[Service Worker] Removing Old Cache: ', key);
+
+            // returns a promise to delete given cache from cache storage
+            return caches.delete(key);
+          }
+        })
+      );
+    })
+  );
 
   /*
     Below line basically ensures that the service workers are loaded or are activated correctly. 
