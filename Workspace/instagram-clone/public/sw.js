@@ -37,7 +37,7 @@ self.addEventListener('install', (event) => {
     So this can lead to problem. Hence use event.waitUntil
   */
   event.waitUntil(
-    // 'caches' refers to overall Cache Storage
+    // 'caches' refers to overall Cache Storage. You can give any name for your static cache.
     caches.open('static').then((cache) => {
       // caches.open() returns a reference to the cache so that we can add content/files to this cache
       console.log('[Service Worker] Precaching App Shell.');
@@ -131,14 +131,30 @@ self.addEventListener('fetch', (event) => {
   // match() will have a look for given 'request' at all our sub-caches and see if we find a given resource there.
   // Note - the key in the cache is always a 'request' not a string.
   event.respondWith(
-    caches.match(event.request).then((response) => {
+    caches.match(event.request).then((cachedResponse) => {
       // if match() doesn't find a match, it resolves. i.e. the 'response' will be null
-      if (response) {
+      if (cachedResponse) {
         // returning value from the cache
-        return response;
+        return cachedResponse;
       } else {
         // if not found in cache, then continue. i.e. make a network request
-        return fetch(event.request);
+        // DYNAMIC CACHING - fetch resource from server and store it in the cache, dynamically.
+        return fetch(event.request).then((fetchedResponse) => {
+          // you can give any name for your dynamic cache.
+          // calling return as we are returning fetchedResponse below
+          return caches.open('dynamic').then((cache) => {
+            /* For the response, if we store it in cache, it is basically consumed which means it's empty.
+               This is how responses work. You can only consume/use them once 
+               and storing them in the cache uses the response. 
+               So we should store the cloned version of response
+            */
+            cache.put(event.request.url, fetchedResponse.clone());
+            // return response
+            // otherwise first request(actual network all) will fail, though the response will be cached
+            //           and on next request content will be served from cache.
+            return fetchedResponse;
+          });
+        });
       }
     })
   );
