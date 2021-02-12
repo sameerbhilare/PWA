@@ -13,6 +13,9 @@
     Here we don't have access to DOM events as service workers don't have access to DOM itself.
 */
 
+var CACHE_STATIC_NAME = 'static-v5';
+var CACHE_DYNAMIC_NAME = 'dynamic-v2';
+
 // ======================================================
 // LIFE CYCLE EVENTS
 // ======================================================
@@ -38,7 +41,7 @@ self.addEventListener('install', (event) => {
   */
   event.waitUntil(
     // 'caches' refers to overall Cache Storage. You can give any name for your static cache.
-    caches.open('static-v4').then((cache) => {
+    caches.open(CACHE_STATIC_NAME).then((cache) => {
       // caches.open() returns a reference to the cache so that we can add content/files to this cache
       console.log('[Service Worker] Precaching App Shell.');
 
@@ -106,7 +109,7 @@ self.addEventListener('activate', (event) => {
         // transform this array of strings into an array of promises (to delete given cache).
         keySet.map((key) => {
           // we want to delete old caches only.
-          if (key !== 'static-v4' && key !== 'dynamic') {
+          if (key !== CACHE_STATIC_NAME && key !== CACHE_DYNAMIC_NAME) {
             console.log('[Service Worker] Removing Old Cache: ', key);
 
             // returns a promise to delete given cache from cache storage
@@ -169,7 +172,7 @@ self.addEventListener('fetch', (event) => {
           .then((fetchedResponse) => {
             // you can give any name for your dynamic cache.
             // calling return as we are returning fetchedResponse below
-            return caches.open('dynamic').then((cache) => {
+            return caches.open(CACHE_DYNAMIC_NAME).then((cache) => {
               /* 
                 For the response, if we store it in cache, it is basically consumed which means it's empty.
                 This is how responses work. You can only consume/use them once 
