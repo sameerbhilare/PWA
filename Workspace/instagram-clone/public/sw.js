@@ -139,22 +139,28 @@ self.addEventListener('fetch', (event) => {
       } else {
         // if not found in cache, then continue. i.e. make a network request
         // DYNAMIC CACHING - fetch resource from server and store it in the cache, dynamically.
-        return fetch(event.request).then((fetchedResponse) => {
-          // you can give any name for your dynamic cache.
-          // calling return as we are returning fetchedResponse below
-          return caches.open('dynamic').then((cache) => {
-            /* For the response, if we store it in cache, it is basically consumed which means it's empty.
-               This is how responses work. You can only consume/use them once 
-               and storing them in the cache uses the response. 
-               So we should store the cloned version of response
-            */
-            cache.put(event.request.url, fetchedResponse.clone());
-            // return response
-            // otherwise first request(actual network all) will fail, though the response will be cached
-            //           and on next request content will be served from cache.
-            return fetchedResponse;
+        return fetch(event.request)
+          .then((fetchedResponse) => {
+            // you can give any name for your dynamic cache.
+            // calling return as we are returning fetchedResponse below
+            return caches.open('dynamic').then((cache) => {
+              /* 
+                For the response, if we store it in cache, it is basically consumed which means it's empty.
+                This is how responses work. You can only consume/use them once 
+                and storing them in the cache uses the response. 
+                So we should store the cloned version of response
+              */
+              cache.put(event.request.url, fetchedResponse.clone());
+              // return response
+              // otherwise first request(actual network all) will fail, though the response will be cached
+              //           and on next request content will be served from cache.
+              return fetchedResponse;
+            });
+          })
+          .catch((err) => {
+            // do nothing.
+            // handle error to avoid logging error logs in case of access in offline mode.
           });
-        });
       }
     })
   );
