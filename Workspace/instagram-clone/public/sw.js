@@ -137,6 +137,8 @@ self.addEventListener('activate', (event) => {
     fetch event will be emitted when the HTML pages for example load assets like the scripts 
     or like our CSS code through links or when they load an image thru <img> tag.
     It will also trigger if we manually send a fetch request in the app.js file.
+
+    Strategy: Cache with Network Fallback
 */
 self.addEventListener('fetch', (event) => {
   //console.log('[Service Worker] Fetching something ...', event);
@@ -204,3 +206,19 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
+/*
+  Strategy: Cache Only
+  Our page sends a fetch request. The service worker intercepts the request. 
+  We then have a look at the cache and if we find a resource there, we return it to the page. 
+  We totally ignore the network.
+*/
+/*
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    // match() will have a look for given 'request' at ALL our sub-caches and see if we find a given resource there.
+    // Note - the key in the cache is always a 'request' not a string.
+    caches.match(event.request)
+  );
+});
+*/
