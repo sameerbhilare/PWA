@@ -199,8 +199,8 @@ self.addEventListener('fetch', (event) => {
       caches.open(CACHE_DYNAMIC_NAME).then((cache) => {
         return fetch(event.request).then((fetchedResponse) => {
           console.log('[Service Worker] fetchedResponse', fetchedResponse);
-          // trim cache before storing new items
-          trimCache(CACHE_DYNAMIC_NAME, MAX_ITEMS_IN_DYNAMIC_CACHE);
+          // trim cache before storing new items - commenting out
+          // trimCache(CACHE_DYNAMIC_NAME, MAX_ITEMS_IN_DYNAMIC_CACHE);
           cache.put(event.request.url, fetchedResponse.clone());
           // need to return server response back. (so also the 'Cache then Network' code in feed.js)
           return fetchedResponse;
@@ -238,8 +238,8 @@ self.addEventListener('fetch', (event) => {
                   and storing them in the cache uses the response.
                   So we should store the cloned version of response
                 */
-                // trim cache before storing new items
-                trimCache(CACHE_DYNAMIC_NAME, MAX_ITEMS_IN_DYNAMIC_CACHE);
+                // trim cache before storing new items - commenting out
+                // trimCache(CACHE_DYNAMIC_NAME, MAX_ITEMS_IN_DYNAMIC_CACHE);
                 cache.put(event.request.url, fetchedResponse.clone());
 
                 // return response
