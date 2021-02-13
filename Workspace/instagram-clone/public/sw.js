@@ -234,3 +234,26 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(fetch(event.request));
 });
 */
+
+/* ===================================================================================
+  Strategy: Network with Cache Fallback
+*/
+/*
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    // no need to write then() block because if success, that will be returned.
+    fetch(event.request)
+      // Network with Cache Fallback: with dynamic caching.
+      // (You can remove this then block if you don't want to use dynamic cache)
+      .then((fetchedResponse) => {
+        return caches.open(CACHE_DYNAMIC_NAME).then((cache) => {
+          cache.put(event.request.url, fetchedResponse.clone());
+          return fetchedResponse;
+        });
+      })
+      .catch((err) => {
+        return caches.match(event.request);
+      })
+  );
+});
+*/
