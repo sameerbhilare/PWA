@@ -31,7 +31,14 @@ shareImageButton.addEventListener('click', openCreatePostModal);
 closeCreatePostModalButton.addEventListener('click', closeCreatePostModal);
 
 function onSaveButtonClicked(event) {
-  console.log('clicked');
+  // first of all check if the browser supports 'caches'
+  if ('caches' in window) {
+    caches.open('user-requested').then((cache) => {
+      // fetch from server and then add the request and response in the cache
+      cache.add('https://httpbin.org/get'); // this is what is fetched in the card
+      cache.add('/src/images/sf-boat.jpg'); // this is requested in the card
+    });
+  }
 }
 
 function createCard() {
