@@ -20,6 +20,23 @@ function openCreatePostModal() {
       }
     });
   }
+
+  // for testing only. This is not appropriate place to unregister a service worker.
+  // unregisterServiceWorker();
+}
+
+/*
+  Unregister Service Worker.
+  You can call this function from appropriate place.
+*/
+function unregisterServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (var i = 0; i < registrations.length; i++) {
+        registrations[i].unregister();
+      }
+    });
+  }
 }
 
 function closeCreatePostModal() {
