@@ -82,21 +82,25 @@ function createCard() {
 
 /* ==============================
  * Strategy: Cache then Network
+   Belo code is for GET Request.
+   For POST request, 
+    use url => https://httpbin.org/post
+    and change the fetch call to 
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: {
+          message: JSON.stringify({ message: 'Some message' }),
+        },)
  */
-var url = 'https://httpbin.org/post';
+var url = 'https://httpbin.org/get';
 // this flag is used to check if response from server is received before we could serve from cache.
 // in that case, we should not use the cached response.
 var serverResponseReceived = false;
-fetch(url, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-  },
-  body: {
-    message: JSON.stringify({ message: 'Some message' }),
-  },
-})
+fetch(url)
   .then(function (serverResponse) {
     return serverResponse.json();
   })
