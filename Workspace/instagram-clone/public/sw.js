@@ -15,6 +15,8 @@
 
 var CACHE_STATIC_NAME = 'static-v5';
 var CACHE_DYNAMIC_NAME = 'dynamic-v5';
+var MAX_ITEMS_IN_DYNAMIC_CACHE = 20;
+
 var STATIC_FILES = [
   '/',
   '/index.html',
@@ -31,6 +33,23 @@ var STATIC_FILES = [
   'https://fonts.googleapis.com/icon?family=Material+Icons', // CDN icons
   'https://cdnjs.cloudflare.com/ajax/libs/material-design-lite/1.3.0/material.indigo-pink.min.css',
 ];
+
+/*
+  Cleaning / Trimming cache
+  maxItemm - number of max items allowed in cache.
+*/
+function trimCache(cacheName, maxItems) {
+  caches.open(cacheName).then((cache) => {
+    // returns requests as keys
+    return cache.keys().then((keys) => {
+      if (keys.length > maxItems) {
+        // means we have more items in the cache then max allowed
+        // delete oldest item and recuresively call this same function till cache size stays in limit
+        cache.delete(keys[0]).then(trimCache(cacheName, maxItems));
+      }
+    });
+  });
+}
 
 // ======================================================
 // LIFE CYCLE EVENTS
@@ -180,6 +199,8 @@ self.addEventListener('fetch', (event) => {
       caches.open(CACHE_DYNAMIC_NAME).then((cache) => {
         return fetch(event.request).then((fetchedResponse) => {
           console.log('[Service Worker] fetchedResponse', fetchedResponse);
+          // trim cache before storing new items
+          trimCache(CACHE_DYNAMIC_NAME, MAX_ITEMS_IN_DYNAMIC_CACHE);
           cache.put(event.request.url, fetchedResponse.clone());
           // need to return server response back. (so also the 'Cache then Network' code in feed.js)
           return fetchedResponse;
@@ -217,6 +238,8 @@ self.addEventListener('fetch', (event) => {
                   and storing them in the cache uses the response.
                   So we should store the cloned version of response
                 */
+                // trim cache before storing new items
+                trimCache(CACHE_DYNAMIC_NAME, MAX_ITEMS_IN_DYNAMIC_CACHE);
                 cache.put(event.request.url, fetchedResponse.clone());
 
                 // return response
