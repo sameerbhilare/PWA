@@ -130,6 +130,15 @@ self.addEventListener('activate', (event) => {
   return self.clients.claim();
 });
 
+function isInArray(string, array) {
+  for (var i = 0; i < array.length; i++) {
+    if (array[i] === string) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // ======================================================
 // NON-LIFE CYCLE EVENTS
 // ======================================================
@@ -174,7 +183,7 @@ self.addEventListener('fetch', (event) => {
         });
       })
     );
-  } else if (new RegExp('\\b' + STATIC_FILES.join('\\b|\\b') + '\\b').test(event.request.url)) {
+  } else if (isInArray(event.request.url, STATIC_FILES)) {
     // join all  static files with the word boundary operators (this basically means
     // we have separate words) and check if the URL matches this regular expression of separate words.
 
