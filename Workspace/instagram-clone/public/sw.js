@@ -13,8 +13,24 @@
     Here we don't have access to DOM events as service workers don't have access to DOM itself.
 */
 
-var CACHE_STATIC_NAME = 'static-v4';
-var CACHE_DYNAMIC_NAME = 'dynamic-v3';
+var CACHE_STATIC_NAME = 'static-v5';
+var CACHE_DYNAMIC_NAME = 'dynamic-v5';
+var STATIC_FILES = [
+  '/',
+  '/index.html',
+  '/offline.html', // this is the default offline fallback page
+  '/src/js/app.js',
+  '/src/js/feed.js',
+  '/src/js/material.min.js',
+  '/src/js/promise.js', // not required for browsers supporting SW. See above comment for details.
+  '/src/js/fetch.js', // not required for browsers supporting SW. See above comment for details.
+  '/src/css/app.css',
+  '/src/css/feed.css',
+  '/src/images/main-image.jpg', // only this image because this is the only static image used in /index.html page
+  'https://fonts.googleapis.com/css?family=Roboto:400,700', // CDN Font
+  'https://fonts.googleapis.com/icon?family=Material+Icons', // CDN icons
+  'https://cdnjs.cloudflare.com/ajax/libs/material-design-lite/1.3.0/material.indigo-pink.min.css',
+];
 
 // ======================================================
 // LIFE CYCLE EVENTS
@@ -71,22 +87,7 @@ self.addEventListener('install', (event) => {
         the CDN servers you are pre-caching from should set the CORS headers to allow cross-origin-access to these files.
         If they don't, this will throw an error.
         */
-      cache.addAll([
-        '/',
-        '/index.html',
-        '/offline.html', // this is the default offline fallback page
-        '/src/js/app.js',
-        '/src/js/feed.js',
-        '/src/js/material.min.js',
-        '/src/js/promise.js', // not required for browsers supporting SW. See above comment for details.
-        '/src/js/fetch.js', // not required for browsers supporting SW. See above comment for details.
-        '/src/css/app.css',
-        '/src/css/feed.css',
-        '/src/images/main-image.jpg', // only this image because this is the only static image used in /index.html page
-        'https://fonts.googleapis.com/css?family=Roboto:400,700', // CDN Font
-        'https://fonts.googleapis.com/icon?family=Material+Icons', // CDN icons
-        'https://cdnjs.cloudflare.com/ajax/libs/material-design-lite/1.3.0/material.indigo-pink.min.css', // CDN css
-      ]);
+      cache.addAll(STATIC_FILES);
     })
   );
 });
@@ -133,6 +134,107 @@ self.addEventListener('activate', (event) => {
 // NON-LIFE CYCLE EVENTS
 // ======================================================
 // 'fetch' event will get triggered whenever our web application fetches something.
+/* ====================================
+  fetch event will be emitted when the HTML pages for example load assets like the scripts 
+  or like our CSS code through links or when they load an image thru <img> tag.
+  It will also trigger if we manually send a fetch request in the app.js file.
+
+   Parsing the request url to use different strategy for different urls
+*/
+self.addEventListener('fetch', (event) => {
+  var url = 'https://httpbin.org/get';
+
+  if (event.request.url.indexOf(url) > -1) {
+    // =============================================================
+    /*
+      Use "Cache then Network" strategy for the urls which are initiated from normal javascript
+      with "Cache then Network" strategy. e.g. here above 'url' is initiated from feed.js            
+    */
+
+    /* 
+      Stragegy: Cache then Network
+
+      With this in place, 
+      We're making sure that we do reach out to the cache first (in the feed.js). 
+          If the item is there, we display it immediately.
+      We also make a network request SIMULTANEOUSLY (in the feed.js).
+          Once the response is back from the network, 
+          If it's a valid response, we store it in the cache here in service worker's 'fetch' event.
+          If it's not, we don't do anything with it.
+          But then we still have something served from the cache (code in feed.js). 
+          If we don't have it in the cache and we can't get it from the network, well there's nothing we can do.
+    */
+    event.respondWith(
+      caches.open(CACHE_DYNAMIC_NAME).then((cache) => {
+        return fetch(event.request).then((fetchedResponse) => {
+          console.log('[Service Worker] fetchedResponse', fetchedResponse);
+          cache.put(event.request.url, fetchedResponse.clone());
+          // need to return server response back. (so also the 'Cache then Network' code in feed.js)
+          return fetchedResponse;
+        });
+      })
+    );
+  } else if (new RegExp('\\b' + STATIC_FILES.join('\\b|\\b') + '\\b').test(event.request.url)) {
+    // join all  static files with the word boundary operators (this basically means
+    // we have separate words) and check if the URL matches this regular expression of separate words.
+
+    // Using "Cache only" strategy for static assets. (It is perfectly fine, if we don't have this separate strategy.)
+    event.respondWith(caches.match(event.request));
+  } else {
+    // =============================================================
+    // otherwise use our old strategy of Cache with network fallback
+    event.respondWith(
+      // match() will have a look for given 'request' at ALL our sub-caches and see if we find a given resource there.
+      // Note - the key in the cache is always a 'request' not a string.
+      caches.match(event.request).then((cachedResponse) => {
+        // if match() doesn't find a match, it resolves. i.e. the 'response' will be null
+        if (cachedResponse) {
+          // returning value from the cache
+          return cachedResponse;
+        } else {
+          // if not found in cache, then continue. i.e. make a network request
+          // DYNAMIC CACHING - fetch resource from server and store it in the cache, dynamically.
+          return fetch(event.request)
+            .then((fetchedResponse) => {
+              // you can give any name for your dynamic cache.
+              // calling return as we are returning fetchedResponse below
+              return caches.open(CACHE_DYNAMIC_NAME).then((cache) => {
+                /*
+                  For the response, if we store it in cache, it is basically consumed which means it's empty.
+                  This is how responses work. You can only consume/use them once
+                  and storing them in the cache uses the response.
+                  So we should store the cloned version of response
+                */
+                cache.put(event.request.url, fetchedResponse.clone());
+
+                // return response
+                // otherwise first request(actual network all) will fail, though the response will be cached
+                //           and on next request content will be served from cache.
+                return fetchedResponse;
+              });
+            })
+            .catch((err) => {
+              // Error will be thrown when user is offline and the requested page is not cached.
+              // So here we should return the default offline fallback page.
+              /*
+                This of course has the side effect that if it's some request other than .html
+                like us fetching some JSON from a URL we can't reach, we also return this default page
+                We can fine tune this later.
+              */
+              return caches.open(CACHE_STATIC_NAME).then((cache) => {
+                // "Routing": being able to look into the request URL and deciding what the best strategy is.
+                // Here we want to show offline.html page if we are requesting /help/index.html page and not available in above blocks
+                if (event.request.url.indexOf('/help') > -1) {
+                  return cache.match('/offline.html');
+                }
+              });
+            });
+        }
+      })
+    );
+  }
+});
+
 /* 
     fetch event will be emitted when the HTML pages for example load assets like the scripts 
     or like our CSS code through links or when they load an image thru <img> tag.
@@ -257,102 +359,3 @@ self.addEventListener('fetch', (event) => {
   );
 });
 */
-
-/* ====================================
-   Stragegy: Cache then Network
-
-   With this in place, 
-   We're making sure that we do reach out to the cache first (in the feed.js). 
-      If the item is there, we display it immediately.
-   We also make a network request SIMULTANEOUSLY (in the feed.js).
-      Once the response is back from the network, 
-      If it's a valid response, we store it in the cache here in service worker's 'fetch' event.
-      If it's not, we don't do anything with it.
-      But then we still have something served from the cache (code in feed.js). 
-      If we don't have it in the cache and we can't get it from the network, well there's nothing we can do.
-*/
-self.addEventListener('fetch', (event) => {
-  var url = 'https://httpbin.org/get';
-
-  // parsing the request url to use different strategy for different urls
-
-  if (event.request.url.indexOf(url) > -1) {
-    // =============================================================
-    /*
-      Use "Cache then Network" strategy for the urls which are initiated from normal javascript
-      with "Cache then Network" strategy. e.g. here above 'url' is initiated from feed.js            
-    */
-
-    /* 
-      Stragegy: Cache then Network
-
-      With this in place, 
-      We're making sure that we do reach out to the cache first (in the feed.js). 
-          If the item is there, we display it immediately.
-      We also make a network request SIMULTANEOUSLY (in the feed.js).
-          Once the response is back from the network, 
-          If it's a valid response, we store it in the cache here in service worker's 'fetch' event.
-          If it's not, we don't do anything with it.
-          But then we still have something served from the cache (code in feed.js). 
-          If we don't have it in the cache and we can't get it from the network, well there's nothing we can do.
-    */
-    event.respondWith(
-      caches.open(CACHE_DYNAMIC_NAME).then((cache) => {
-        return fetch(event.request).then((fetchedResponse) => {
-          console.log('[Service Worker] fetchedResponse', fetchedResponse);
-          cache.put(event.request.url, fetchedResponse.clone());
-          // need to return server response back. (so also the 'Cache then Network' code in feed.js)
-          return fetchedResponse;
-        });
-      })
-    );
-  } else {
-    // =============================================================
-    // otherwise use our old strategy of Cache with network fallback
-    event.respondWith(
-      // match() will have a look for given 'request' at ALL our sub-caches and see if we find a given resource there.
-      // Note - the key in the cache is always a 'request' not a string.
-      caches.match(event.request).then((cachedResponse) => {
-        // if match() doesn't find a match, it resolves. i.e. the 'response' will be null
-        if (cachedResponse) {
-          // returning value from the cache
-          return cachedResponse;
-        } else {
-          // if not found in cache, then continue. i.e. make a network request
-          // DYNAMIC CACHING - fetch resource from server and store it in the cache, dynamically.
-          return fetch(event.request)
-            .then((fetchedResponse) => {
-              // you can give any name for your dynamic cache.
-              // calling return as we are returning fetchedResponse below
-              return caches.open(CACHE_DYNAMIC_NAME).then((cache) => {
-                /*
-                      For the response, if we store it in cache, it is basically consumed which means it's empty.
-                      This is how responses work. You can only consume/use them once
-                      and storing them in the cache uses the response.
-                      So we should store the cloned version of response
-                    */
-                cache.put(event.request.url, fetchedResponse.clone());
-
-                // return response
-                // otherwise first request(actual network all) will fail, though the response will be cached
-                //           and on next request content will be served from cache.
-                return fetchedResponse;
-              });
-            })
-            .catch((err) => {
-              // Error will be thrown when user is offline and the requested page is not cached.
-              // So here we should return the default offline fallback page.
-              /*
-                    This of course has the side effect that if it's some request other than .html
-                    like us fetching some JSON from a URL we can't reach, we also return this default page
-                    We can fine tune this later.
-                  */
-              return caches.open(CACHE_STATIC_NAME).then((cache) => {
-                return cache.match('/offline.html');
-              });
-            });
-        }
-      })
-    );
-  }
-});
