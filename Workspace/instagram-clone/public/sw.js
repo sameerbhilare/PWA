@@ -13,8 +13,8 @@
     Here we don't have access to DOM events as service workers don't have access to DOM itself.
 */
 
-var CACHE_STATIC_NAME = 'static-v7';
-var CACHE_DYNAMIC_NAME = 'dynamic-v2';
+var CACHE_STATIC_NAME = 'static-v8';
+var CACHE_DYNAMIC_NAME = 'dynamic-v3';
 
 // ======================================================
 // LIFE CYCLE EVENTS
@@ -179,8 +179,7 @@ self.addEventListener('fetch', (event) => {
                 and storing them in the cache uses the response. 
                 So we should store the cloned version of response
               */
-              // temporary commenting this caching to simulate "Cache on Demand"
-              //cache.put(event.request.url, fetchedResponse.clone());
+              cache.put(event.request.url, fetchedResponse.clone());
 
               // return response
               // otherwise first request(actual network all) will fail, though the response will be cached

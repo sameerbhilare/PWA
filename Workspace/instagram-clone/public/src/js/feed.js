@@ -30,6 +30,8 @@ shareImageButton.addEventListener('click', openCreatePostModal);
 
 closeCreatePostModalButton.addEventListener('click', closeCreatePostModal);
 
+// Cache on Demand - Simulation
+/*
 function onSaveButtonClicked(event) {
   // first of all check if the browser supports 'caches'
   if ('caches' in window) {
@@ -40,6 +42,7 @@ function onSaveButtonClicked(event) {
     });
   }
 }
+*/
 
 function createCard() {
   var cardWrapper = document.createElement('div');
@@ -59,10 +62,13 @@ function createCard() {
   cardSupportingText.className = 'mdl-card__supporting-text';
   cardSupportingText.textContent = 'In San Francisco';
   cardSupportingText.style.textAlign = 'center';
+  // Cache on Demand - Simulation
+  /*
   var cardSaveButton = document.createElement('button');
   cardSaveButton.textContent = 'Save';
   cardSaveButton.addEventListener('click', onSaveButtonClicked);
   cardSupportingText.appendChild(cardSaveButton);
+  */
   cardWrapper.appendChild(cardSupportingText);
   componentHandler.upgradeElement(cardWrapper);
   sharedMomentsArea.appendChild(cardWrapper);
