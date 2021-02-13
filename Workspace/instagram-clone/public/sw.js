@@ -187,7 +187,7 @@ self.addEventListener('fetch', (event) => {
       // match() will have a look for given 'request' at ALL our sub-caches and see if we find a given resource there.
       // Note - the key in the cache is always a 'request' not a string.
       caches.match(event.request).then((cachedResponse) => {
-        // if match() doesn't find a match, it resolves. i.e. the 'response' will be null
+        // even if match() doesn't find a match, it resolves. i.e. the 'response' will be null
         if (cachedResponse) {
           // returning value from the cache
           return cachedResponse;
