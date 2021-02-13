@@ -235,8 +235,10 @@ self.addEventListener('fetch', (event) => {
               */
               return caches.open(CACHE_STATIC_NAME).then((cache) => {
                 // "Routing": being able to look into the request URL and deciding what the best strategy is.
-                // Here we want to show offline.html page if we are requesting /help/index.html page and not available in above blocks
-                if (event.request.url.indexOf('/help') > -1) {
+                // Here we want to show offline.html page if we are requesting .html pages, not available in above blocks
+                // so if the incoming request accepts HTML
+                // You can extend this feature to other parts like if you are expecting an image and as a fallback you could use a dummy image.
+                if (event.request.headers.get('accept').includes('text/html')) {
                   return cache.match('/offline.html');
                 }
               });
