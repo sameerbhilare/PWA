@@ -207,7 +207,7 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-/*
+/* ===================================================================================
   Strategy: Cache Only
   Our page sends a fetch request. The service worker intercepts the request. 
   We then have a look at the cache and if we find a resource there, we return it to the page. 
@@ -220,5 +220,17 @@ self.addEventListener('fetch', (event) => {
     // Note - the key in the cache is always a 'request' not a string.
     caches.match(event.request)
   );
+});
+*/
+
+/* ===================================================================================
+  Strategy: Network Only
+  There we don't use the service worker at all, 
+  instead the page sends a request to the network and we return that.
+  Either you can remove this 'fetch' event listener or add below code.
+*/
+/*
+self.addEventListener('fetch', (event) => {
+  event.respondWith(fetch(event.request));
 });
 */
