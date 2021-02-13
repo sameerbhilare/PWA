@@ -13,8 +13,8 @@
     Here we don't have access to DOM events as service workers don't have access to DOM itself.
 */
 
-var CACHE_STATIC_NAME = 'static-v11';
-var CACHE_DYNAMIC_NAME = 'dynamic-v4';
+var CACHE_STATIC_NAME = 'static-v4';
+var CACHE_DYNAMIC_NAME = 'dynamic-v3';
 
 // ======================================================
 // LIFE CYCLE EVENTS
@@ -30,13 +30,13 @@ self.addEventListener('install', (event) => {
     If you try to open a cache which does not exist yet, it will create it.
     event.waitUntil() waits until caches.open (which returns a promise) is finished.
 
-    Why should we use event.waitUntil()? 
-    Remember in a service worker, we work with asynchronous code because it's running in the background 
-    and it's event driven. Therefore the install event doesn't wait for cache.open to finish by default 
+    Why should we use event.waitUntil()?
+    Remember in a service worker, we work with asynchronous code because it's running in the background
+    and it's event driven. Therefore the install event doesn't wait for cache.open to finish by default
     (as it returns promise). It would just see install event, trigger this operation and continue.
-    And this can lead to huge problems because once the service worker installation finishes, 
-    you might have a fetch listener, you do fetch a resource and you try to get it from the cache 
-    even though your caching operation hasn't finished yet. 
+    And this can lead to huge problems because once the service worker installation finishes,
+    you might have a fetch listener, you do fetch a resource and you try to get it from the cache
+    even though your caching operation hasn't finished yet.
     So this can lead to problem. Hence use event.waitUntil
   */
   event.waitUntil(
@@ -48,26 +48,26 @@ self.addEventListener('install', (event) => {
       /*
         PRE-CACHING / STATIC CACHING -
         Make a request to given file, download it and stores both 'request' and 'response' values in the cache.
-        Think of these as 'requests' not paths. 
-        Just cachig '/index.html' is not enough, we have to also cache '/' 
+        Think of these as 'requests' not paths.
+        Just cachig '/index.html' is not enough, we have to also cache '/'
         because we enter http://localhost:8080 in the URL which behind the scenes returns index.html page.
         Hence we must cache the 'request' for '/' in addition to the 'request' for '/index.html'
 
-        We need the polyfills promise.js and fetch.js for legacy browsers 
+        We need the polyfills promise.js and fetch.js for legacy browsers
         but those browsers won't support service workers anyways, so there's no value in storing these files.
-        However since these files are also referenced in the index.html, 
+        However since these files are also referenced in the index.html,
         we can precache those as they will anyway be loaded since they are part of index.html
 
         We are not pre-caching /html/index.html and /src/css/help.css because we want to cache only bare minimum.
         We want to store the bare minimum app shell so as to make our first page run.
 
-        For the icons, you don't really need to pre-cache those. 
-        Yes, you won't be able to add it to the homescreen if you don't pre-cache the icons 
+        For the icons, you don't really need to pre-cache those.
+        Yes, you won't be able to add it to the homescreen if you don't pre-cache the icons
         but that shouldn't be an issue because offline support shouldn't be the permanent state of our application.
 
-        We also need to precache the things we get from CDNs, like the styling package or the fonts 
+        We also need to precache the things we get from CDNs, like the styling package or the fonts
         and image icon sets which are referenced in the /index.html.
-        One important restriction though - if you don't want to get an error while fetching from CDNs, 
+        One important restriction though - if you don't want to get an error while fetching from CDNs,
         the CDN servers you are pre-caching from should set the CORS headers to allow cross-origin-access to these files.
         If they don't, this will throw an error.
         */
@@ -140,72 +140,72 @@ self.addEventListener('activate', (event) => {
 
     Strategy: Cache with Network Fallback
 */
-self.addEventListener('fetch', (event) => {
-  //console.log('[Service Worker] Fetching something ...', event);
+// self.addEventListener('fetch', (event) => {
+//   //console.log('[Service Worker] Fetching something ...', event);
 
-  /*
-    Every outgoing fetch request goes through the service worker and so does every response.
-    event.respondWith() allows us to overwrite the data which gets sent back. Basically, we intercept the fetch request from browser.
-    We intercept this request and can return different things depending on whether we have online access,
-    if we have internet access or not. We'll then use respondWith to simply check the internet connection 
-    basically and return stuff from our cache or from the network.
-  */
+//   /*
+//     Every outgoing fetch request goes through the service worker and so does every response.
+//     event.respondWith() allows us to overwrite the data which gets sent back. Basically, we intercept the fetch request from browser.
+//     We intercept this request and can return different things depending on whether we have online access,
+//     if we have internet access or not. We'll then use respondWith to simply check the internet connection
+//     basically and return stuff from our cache or from the network.
+//   */
 
-  // event.respondWith(null); // don't do anything.Reload your app to see the behavior.
+//   // event.respondWith(null); // don't do anything.Reload your app to see the behavior.
 
-  // this line as same as not having this line :) bcz this is what browser will anyway do, i.e. fetch the requested asset
-  // event.respondWith(fetch(event.request));
+//   // this line as same as not having this line :) bcz this is what browser will anyway do, i.e. fetch the requested asset
+//   // event.respondWith(fetch(event.request));
 
-  /*
-    In the fetch event listener of the service worker, 
-    make sure we actually fetch the data from our cache if available. 
-  */
-  event.respondWith(
-    // match() will have a look for given 'request' at ALL our sub-caches and see if we find a given resource there.
-    // Note - the key in the cache is always a 'request' not a string.
-    caches.match(event.request).then((cachedResponse) => {
-      // if match() doesn't find a match, it resolves. i.e. the 'response' will be null
-      if (cachedResponse) {
-        // returning value from the cache
-        return cachedResponse;
-      } else {
-        // if not found in cache, then continue. i.e. make a network request
-        // DYNAMIC CACHING - fetch resource from server and store it in the cache, dynamically.
-        return fetch(event.request)
-          .then((fetchedResponse) => {
-            // you can give any name for your dynamic cache.
-            // calling return as we are returning fetchedResponse below
-            return caches.open(CACHE_DYNAMIC_NAME).then((cache) => {
-              /* 
-                For the response, if we store it in cache, it is basically consumed which means it's empty.
-                This is how responses work. You can only consume/use them once 
-                and storing them in the cache uses the response. 
-                So we should store the cloned version of response
-              */
-              cache.put(event.request.url, fetchedResponse.clone());
+//   /*
+//     In the fetch event listener of the service worker,
+//     make sure we actually fetch the data from our cache if available.
+//   */
+//   event.respondWith(
+//     // match() will have a look for given 'request' at ALL our sub-caches and see if we find a given resource there.
+//     // Note - the key in the cache is always a 'request' not a string.
+//     caches.match(event.request).then((cachedResponse) => {
+//       // if match() doesn't find a match, it resolves. i.e. the 'response' will be null
+//       if (cachedResponse) {
+//         // returning value from the cache
+//         return cachedResponse;
+//       } else {
+//         // if not found in cache, then continue. i.e. make a network request
+//         // DYNAMIC CACHING - fetch resource from server and store it in the cache, dynamically.
+//         return fetch(event.request)
+//           .then((fetchedResponse) => {
+//             // you can give any name for your dynamic cache.
+//             // calling return as we are returning fetchedResponse below
+//             return caches.open(CACHE_DYNAMIC_NAME).then((cache) => {
+//               /*
+//                 For the response, if we store it in cache, it is basically consumed which means it's empty.
+//                 This is how responses work. You can only consume/use them once
+//                 and storing them in the cache uses the response.
+//                 So we should store the cloned version of response
+//               */
+//               cache.put(event.request.url, fetchedResponse.clone());
 
-              // return response
-              // otherwise first request(actual network all) will fail, though the response will be cached
-              //           and on next request content will be served from cache.
-              return fetchedResponse;
-            });
-          })
-          .catch((err) => {
-            // Error will be thrown when user is offline and the requested page is not cached.
-            // So here we should return the default offline fallback page.
-            /*
-              This of course has the side effect that if it's some request other than .html 
-              like us fetching some JSON from a URL we can't reach, we also return this default page
-              We can fine tune this later.
-            */
-            return caches.open(CACHE_STATIC_NAME).then((cache) => {
-              return cache.match('/offline.html');
-            });
-          });
-      }
-    })
-  );
-});
+//               // return response
+//               // otherwise first request(actual network all) will fail, though the response will be cached
+//               //           and on next request content will be served from cache.
+//               return fetchedResponse;
+//             });
+//           })
+//           .catch((err) => {
+//             // Error will be thrown when user is offline and the requested page is not cached.
+//             // So here we should return the default offline fallback page.
+//             /*
+//               This of course has the side effect that if it's some request other than .html
+//               like us fetching some JSON from a URL we can't reach, we also return this default page
+//               We can fine tune this later.
+//             */
+//             return caches.open(CACHE_STATIC_NAME).then((cache) => {
+//               return cache.match('/offline.html');
+//             });
+//           });
+//       }
+//     })
+//   );
+// });
 
 /* ===================================================================================
   Strategy: Cache Only
@@ -257,3 +257,29 @@ self.addEventListener('fetch', (event) => {
   );
 });
 */
+
+/* ====================================
+   Stragegy: Cache then Network
+
+   With this in place, 
+   We're making sure that we do reach out to the cache first (in the feed.js). 
+      If the item is there, we display it immediately.
+   We also make a network request SIMULTANEOUSLY (in the feed.js).
+      Once the response is back from the network, 
+      If it's a valid response, we store it in the cache here in service worker's 'fetch' event.
+      If it's not, we don't do anything with it.
+      But then we still have something served from the cache (code in feed.js). 
+      If we don't have it in the cache and we can't get it from the network, well there's nothing we can do.
+*/
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.open(CACHE_DYNAMIC_NAME).then((cache) => {
+      return fetch(event.request).then((fetchedResponse) => {
+        console.log('[Service Worker] fetchedResponse', fetchedResponse);
+        cache.put(event.request.url, fetchedResponse.clone());
+        // need to return server response back. (so also the 'Cache then Network' code in feed.js)
+        return fetchedResponse;
+      });
+    })
+  );
+});
