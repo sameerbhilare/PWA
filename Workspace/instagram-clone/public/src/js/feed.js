@@ -83,11 +83,20 @@ function createCard() {
 /* ==============================
  * Strategy: Cache then Network
  */
-var url = 'https://httpbin.org/get';
+var url = 'https://httpbin.org/post';
 // this flag is used to check if response from server is received before we could serve from cache.
 // in that case, we should not use the cached response.
 var serverResponseReceived = false;
-fetch(url)
+fetch(url, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+  },
+  body: {
+    message: JSON.stringify({ message: 'Some message' }),
+  },
+})
   .then(function (serverResponse) {
     return serverResponse.json();
   })
