@@ -13,8 +13,8 @@
     Here we don't have access to DOM events as service workers don't have access to DOM itself.
 */
 
-var CACHE_STATIC_NAME = 'static-v8';
-var CACHE_DYNAMIC_NAME = 'dynamic-v3';
+var CACHE_STATIC_NAME = 'static-v9';
+var CACHE_DYNAMIC_NAME = 'dynamic-v4';
 
 // ======================================================
 // LIFE CYCLE EVENTS
@@ -74,6 +74,7 @@ self.addEventListener('install', (event) => {
       cache.addAll([
         '/',
         '/index.html',
+        '/offline.html', // this is the default offline fallback page
         '/src/js/app.js',
         '/src/js/feed.js',
         '/src/js/material.min.js',
@@ -188,8 +189,16 @@ self.addEventListener('fetch', (event) => {
             });
           })
           .catch((err) => {
-            // do nothing.
-            // handle error to avoid logging error logs in case of access in offline mode.
+            // Error will be thrown when user is offline and the requested page is not cached.
+            // So here we should return the default offline fallback page.
+            /*
+              This of course has the side effect that if it's some request other than .html 
+              like us fetching some JSON from a URL we can't reach, we also return this default page
+              We can fine tune this later.
+            */
+            return caches.open(CACHE_STATIC_NAME).then((cache) => {
+              return cache.match('/offline.html');
+            });
           });
       }
     })
