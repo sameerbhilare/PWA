@@ -53,3 +53,20 @@ function clearAllData(storeName) {
     return tx.complete; // close the transaction. For every write operation, we need to return tx.complete.
   });
 }
+
+// store name and id of the element we want to delete
+function deleteItemFromData(storeName, id) {
+  dbPromise
+    .then((db) => {
+      // every operation has to be wrapped in a transaction.
+      var tx = db.transaction(storeName, 'readwrite');
+      // open the store
+      var store = tx.objectStore(storeName);
+      // delete one item
+      store.delete(id);
+      return tx.complete; // close the transaction. For every write operation, we need to return tx.complete.
+    })
+    .then(() => {
+      console.log('Item Deleted from IndexedDB', id);
+    });
+}
