@@ -4,7 +4,11 @@ var closeCreatePostModalButton = document.querySelector('#close-create-post-moda
 var sharedMomentsArea = document.querySelector('#shared-moments');
 
 function openCreatePostModal() {
-  createPostArea.style.display = 'block';
+  // createPostArea.style.display = 'block';
+  // settimeout is just to make css aware that 'display' and 'transform' are 2 different steps
+  // setTimeout(() => {
+  createPostArea.style.transform = 'translateY(0)';
+  // }, 1);
   // deferredPrompt is set in app.js
   if (deferredPrompt) {
     // show the App install banner.
@@ -40,7 +44,8 @@ function unregisterServiceWorker() {
 }
 
 function closeCreatePostModal() {
-  createPostArea.style.display = 'none';
+  createPostArea.style.transform = 'translateY(100vh)';
+  // createPostArea.style.display = 'none';
 }
 
 shareImageButton.addEventListener('click', openCreatePostModal);
