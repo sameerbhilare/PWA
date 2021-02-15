@@ -2,6 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <!-- 
+    width=device-width =>
+    Now by sitting width equal to device width, we ensure that we actually scale this application correctly
+    to the different device widths, so that you don't get the look of opening a desktop page on a mobile device
+    but instead that we enforce the mobile device boundaries to the application and hence enter the responsive
+    mode we configured with media queries and so on.
+
+    user-scalable=no
+    This makes sure that the user can't pinch and zoom in our application to have mobile app like feel.
+
+    initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0
+    Setting fixed scale of always 1.0
+  -->
   <meta name="viewport"
         content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
