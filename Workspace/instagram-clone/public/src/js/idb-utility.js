@@ -2,6 +2,7 @@
   open an indexedDB database and also create an object store.
   'idb' object is accessible here because we have imported it above using importScripts()
 */
+var DB_VERSION = 1;
 // 'posts-store' database name
 var dbPromise = idb.open('posts-store', DB_VERSION, (db) => {
   // this callback function will get executed whenever database is created
@@ -25,5 +26,18 @@ function writeData(storeName, data) {
     // store data in database against 'id' key (defined above in 'keyPath' property)
     store.put(data);
     return tx.complete; // close the transaction
+  });
+}
+
+function readAllData(storeName) {
+  return dbPromise.then((db) => {
+    // every operation has to be wrapped in a transaction.
+    var tx = db.transaction(storeName, 'readonly');
+    // open the store
+    var store = tx.objectStore(storeName);
+    // here we don't need to call tx.complete because the transaction will complete
+    // but we don't need to return that to indicate that we need it to succeed.
+    // it's a get data operation, if it for some reason fails, we'd simply get back no data
+    return store.getAll();
   });
 }

@@ -24,9 +24,8 @@
 importScripts('/src/js/idb.js');
 importScripts('/src/js/idb-utility.js'); // sequence matters as we need 'idb' first
 
-var CACHE_STATIC_NAME = 'static-v4';
+var CACHE_STATIC_NAME = 'static-v5';
 var CACHE_DYNAMIC_NAME = 'dynamic-v3';
-var DB_VERSION = 1;
 var MAX_ITEMS_IN_DYNAMIC_CACHE = 20;
 
 var STATIC_FILES = [
@@ -166,7 +165,6 @@ function isInArray(string, array) {
   var cachePath;
   if (string.indexOf(self.origin) === 0) {
     // request targets domain where we serve the page from (i.e. NOT a CDN)
-    console.log('matched ', string);
     cachePath = string.substring(self.origin.length); // take the part of the URL AFTER the domain (e.g. after localhost:8080)
   } else {
     cachePath = string; // store the full request (for CDNs)

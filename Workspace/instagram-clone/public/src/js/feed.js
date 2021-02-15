@@ -140,23 +140,16 @@ fetch(url)
     updateUI(dataArry);
   });
 
-if ('caches' in window) {
-  caches
-    .match(url)
-    .then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse.json(); // bcz this particular url returns json data. see above fetch() call
-      }
-    })
-    .then(function (data) {
-      console.log('From Cache', data);
-      if (!serverResponseReceived) {
-        // convert JS object to array
-        var dataArry = [];
-        for (var key in data) {
-          dataArry.push(data[key]);
-        }
-        updateUI(dataArry);
-      }
-    });
+/*
+  In the service worker, we don't need check whether we have access to indexedDB 
+  because in service workers, we have the access and we have already a check present if the browser supports Service worker itself.
+  But here in the feed.js file, we might not have that access because maybe we're in a browser which doesn't support indexedDB.
+*/
+if ('indexedDB' in window) {
+  readAllData('posts').then((dataArr) => {
+    if (!serverResponseReceived) {
+      console.log('From indexedDB', dataArr);
+      updateUI(dataArr);
+    }
+  });
 }
