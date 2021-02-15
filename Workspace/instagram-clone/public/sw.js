@@ -13,8 +13,19 @@
     Here we don't have access to DOM events as service workers don't have access to DOM itself.
 */
 
-var CACHE_STATIC_NAME = 'static-v3';
+/*
+  By default in service worker, we can access files from main project 
+  because the service worker doesn't care about which polyfills or packages we load in our main project 
+  but service workers have a special syntax which allow us to import other packages using 'importScripts'.
+  This simply allows us to point to another script which we want to use in that service worker 
+  and this in general allows you to distribute your code across multiple files.
+  You can of course also use this to make your service worker leaner and outsource some of the code into a separate file,
+*/
+importScripts('/src/js/idb.js');
+
+var CACHE_STATIC_NAME = 'static-v4';
 var CACHE_DYNAMIC_NAME = 'dynamic-v3';
+var DB_VERSION = 1;
 var MAX_ITEMS_IN_DYNAMIC_CACHE = 20;
 
 var STATIC_FILES = [
@@ -23,6 +34,7 @@ var STATIC_FILES = [
   '/offline.html', // this is the default offline fallback page
   '/src/js/app.js',
   '/src/js/feed.js',
+  '/src/js/idb.js', // to access it offline for easy access.
   '/src/js/material.min.js',
   '/src/js/promise.js', // not required for browsers supporting SW. See above comment for details.
   '/src/js/fetch.js', // not required for browsers supporting SW. See above comment for details.
@@ -33,6 +45,22 @@ var STATIC_FILES = [
   'https://fonts.googleapis.com/icon?family=Material+Icons', // CDN icons
   'https://cdnjs.cloudflare.com/ajax/libs/material-design-lite/1.3.0/material.indigo-pink.min.css',
 ];
+
+/*
+  open an indexedDB database and also create an object store.
+  'idb' object is accessible here because we have imported it above using importScripts()
+*/
+// 'posts-store' database name
+var dbPromise = idb.open('posts-store', DB_VERSION, (db) => {
+  // this callback function will get executed whenever database is created
+  // 'post' is object store like a table.
+  if (!db.objectStoreNames.contains('posts')) {
+    // create object store if one does not already exist
+    db.createObjectStore('posts', {
+      keyPath: 'id', // primary key
+    });
+  }
+});
 
 /*
   Cleaning / Trimming cache
@@ -198,11 +226,26 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       caches.open(CACHE_DYNAMIC_NAME).then((cache) => {
         return fetch(event.request).then((fetchedResponse) => {
-          console.log('[Service Worker] fetchedResponse', fetchedResponse);
-          // trim cache before storing new items - commenting out
-          // trimCache(CACHE_DYNAMIC_NAME, MAX_ITEMS_IN_DYNAMIC_CACHE);
-          cache.put(event.request.url, fetchedResponse.clone());
-          // need to return server response back. (so also the 'Cache then Network' code in feed.js)
+          // store the response in IndexedDB and not in the cache storage
+          var clonedResponse = fetchedResponse.clone();
+          clonedResponse.json().then((data) => {
+            console.log(data);
+            // transform to array
+            for (var key in data) {
+              dbPromise.then((db) => {
+                // indexeddb works with transactions. We have to use it.
+                // which store we want to target for this transaction - 'posts'
+                // wihch kind of transaction is this - e.g. readwrite
+                var tx = db.transaction('posts', 'readwrite');
+                // explictly open the store
+                var store = tx.objectStore('posts');
+                // store data in database against 'id' key (defined above in 'keyPath' property)
+                store.put(data[key]);
+                return tx.complete; // close the transaction
+              });
+            }
+          });
+          // return original response
           return fetchedResponse;
         });
       })
