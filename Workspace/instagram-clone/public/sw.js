@@ -22,6 +22,7 @@
   You can of course also use this to make your service worker leaner and outsource some of the code into a separate file,
 */
 importScripts('/src/js/idb.js');
+importScripts('/src/js/idb-utility.js'); // sequence matters as we need 'idb' first
 
 var CACHE_STATIC_NAME = 'static-v4';
 var CACHE_DYNAMIC_NAME = 'dynamic-v3';
@@ -45,22 +46,6 @@ var STATIC_FILES = [
   'https://fonts.googleapis.com/icon?family=Material+Icons', // CDN icons
   'https://cdnjs.cloudflare.com/ajax/libs/material-design-lite/1.3.0/material.indigo-pink.min.css',
 ];
-
-/*
-  open an indexedDB database and also create an object store.
-  'idb' object is accessible here because we have imported it above using importScripts()
-*/
-// 'posts-store' database name
-var dbPromise = idb.open('posts-store', DB_VERSION, (db) => {
-  // this callback function will get executed whenever database is created
-  // 'post' is object store like a table.
-  if (!db.objectStoreNames.contains('posts')) {
-    // create object store if one does not already exist
-    db.createObjectStore('posts', {
-      keyPath: 'id', // primary key
-    });
-  }
-});
 
 /*
   Cleaning / Trimming cache
@@ -232,17 +217,7 @@ self.addEventListener('fetch', (event) => {
             console.log(data);
             // transform to array
             for (var key in data) {
-              dbPromise.then((db) => {
-                // indexeddb works with transactions. We have to use it.
-                // which store we want to target for this transaction - 'posts'
-                // wihch kind of transaction is this - e.g. readwrite
-                var tx = db.transaction('posts', 'readwrite');
-                // explictly open the store
-                var store = tx.objectStore('posts');
-                // store data in database against 'id' key (defined above in 'keyPath' property)
-                store.put(data[key]);
-                return tx.complete; // close the transaction
-              });
+              writeData('posts', data[key]);
             }
           });
           // return original response
