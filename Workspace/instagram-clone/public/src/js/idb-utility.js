@@ -25,7 +25,7 @@ function writeData(storeName, data) {
     var store = tx.objectStore(storeName);
     // store data in database against 'id' key (defined above in 'keyPath' property)
     store.put(data);
-    return tx.complete; // close the transaction
+    return tx.complete; // close the transaction. For every write operation, we need to return tx.complete.
   });
 }
 
@@ -39,5 +39,17 @@ function readAllData(storeName) {
     // but we don't need to return that to indicate that we need it to succeed.
     // it's a get data operation, if it for some reason fails, we'd simply get back no data
     return store.getAll();
+  });
+}
+
+function clearAllData(storeName) {
+  return dbPromise.then((db) => {
+    // every operation has to be wrapped in a transaction.
+    var tx = db.transaction(storeName, 'readwrite');
+    // open the store
+    var store = tx.objectStore(storeName);
+    // clear the store
+    store.clear();
+    return tx.complete; // close the transaction. For every write operation, we need to return tx.complete.
   });
 }

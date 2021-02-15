@@ -211,13 +211,19 @@ self.addEventListener('fetch', (event) => {
         return fetch(event.request).then((fetchedResponse) => {
           // store the response in IndexedDB and not in the cache storage
           var clonedResponse = fetchedResponse.clone();
-          clonedResponse.json().then((data) => {
-            console.log(data);
-            // transform to array
-            for (var key in data) {
-              writeData('posts', data[key]);
-            }
-          });
+          // clear the data fom indexedDB -
+          // this will solve the problem of - what is data is actually deleted at server side. i.e. Firebase
+          clearAllData('posts')
+            .then(() => {
+              return clonedResponse.json();
+            })
+            .then((data) => {
+              // transform to array
+              for (var key in data) {
+                writeData('posts', data[key]);
+              }
+            });
+
           // return original response
           return fetchedResponse;
         });
