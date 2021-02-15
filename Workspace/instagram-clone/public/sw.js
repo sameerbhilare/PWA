@@ -173,7 +173,7 @@ function isInArray(string, array) {
    Parsing the request url to use different strategy for different urls
 */
 self.addEventListener('fetch', (event) => {
-  var url = 'https://httpbin.org/get';
+  var url = 'https://pwa-gram-bcf78-default-rtdb.europe-west1.firebasedatabase.app/posts.json';
 
   if (event.request.url.indexOf(url) > -1) {
     // =============================================================

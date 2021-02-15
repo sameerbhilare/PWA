@@ -67,23 +67,23 @@ function clearCard() {
   }
 }
 
-function createCard() {
+function createCard(data) {
   var cardWrapper = document.createElement('div');
   cardWrapper.className = 'shared-moment-card mdl-card mdl-shadow--2dp';
   var cardTitle = document.createElement('div');
   cardTitle.className = 'mdl-card__title';
-  cardTitle.style.backgroundImage = 'url("/src/images/sf-boat.jpg")';
+  cardTitle.style.backgroundImage = 'url("' + data.image + '")';
   cardTitle.style.backgroundSize = 'cover';
   cardTitle.style.height = '180px';
   cardWrapper.appendChild(cardTitle);
   var cardTitleTextElement = document.createElement('h2');
   cardTitleTextElement.style.color = 'white';
   cardTitleTextElement.className = 'mdl-card__title-text';
-  cardTitleTextElement.textContent = 'San Francisco Trip';
+  cardTitleTextElement.textContent = data.title;
   cardTitle.appendChild(cardTitleTextElement);
   var cardSupportingText = document.createElement('div');
   cardSupportingText.className = 'mdl-card__supporting-text';
-  cardSupportingText.textContent = 'In San Francisco';
+  cardSupportingText.textContent = data.location;
   cardSupportingText.style.textAlign = 'center';
   // Cache on Demand - Simulation
   /*
@@ -95,6 +95,13 @@ function createCard() {
   cardWrapper.appendChild(cardSupportingText);
   componentHandler.upgradeElement(cardWrapper);
   sharedMomentsArea.appendChild(cardWrapper);
+}
+
+function updateUI(data) {
+  clearCard(); // clear duplicate card if already added from cache below
+  for (let i = 0; i < data.length; i++) {
+    createCard(data[i]);
+  }
 }
 
 /* ==============================
@@ -113,7 +120,8 @@ function createCard() {
           message: JSON.stringify({ message: 'Some message' }),
         },)
  */
-var url = 'https://httpbin.org/get';
+// added .json at the end as it is requirement from firebase
+var url = 'https://pwa-gram-bcf78-default-rtdb.europe-west1.firebasedatabase.app/posts.json';
 // this flag is used to check if response from server is received before we could serve from cache.
 // in that case, we should not use the cached response.
 var serverResponseReceived = false;
@@ -124,8 +132,12 @@ fetch(url)
   .then(function (data) {
     serverResponseReceived = true;
     console.log('From Server', data);
-    clearCard(); // clear duplicate card if already added from cache below
-    createCard();
+    // convert JS object to array
+    var dataArry = [];
+    for (var key in data) {
+      dataArry.push(data[key]);
+    }
+    updateUI(dataArry);
   });
 
 if ('caches' in window) {
@@ -139,8 +151,12 @@ if ('caches' in window) {
     .then(function (data) {
       console.log('From Cache', data);
       if (!serverResponseReceived) {
-        clearCard(); // clear duplicate card if already added from server response above
-        createCard();
+        // convert JS object to array
+        var dataArry = [];
+        for (var key in data) {
+          dataArry.push(data[key]);
+        }
+        updateUI(dataArry);
       }
     });
 }
