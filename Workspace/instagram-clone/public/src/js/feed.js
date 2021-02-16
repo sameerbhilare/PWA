@@ -162,6 +162,28 @@ if ('indexedDB' in window) {
   });
 }
 
+// fallback logic if Background sync is not supported by browser
+function sendData() {
+  fetch('https://pwa-gram-bcf78-default-rtdb.europe-west1.firebasedatabase.app/posts.json', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify({
+      id: new Date().toISOString(), // unique id
+      title: titleInput.value,
+      location: locationInput.value,
+      image:
+        'https://firebasestorage.googleapis.com/v0/b/pwa-gram-bcf78.appspot.com/o/sf-boat.jpg?alt=media&token=5347a729-2874-4746-a2bd-2fd211a3a587', // dummy right now
+    }),
+  }).then((response) => {
+    console.log('Sent data', res);
+    // reload page
+    updateUI();
+  });
+}
+
 form.addEventListener('submit', (event) => {
   // avoid page reload
   event.preventDefault();
@@ -217,5 +239,8 @@ form.addEventListener('submit', (event) => {
           console.log(err);
         });
     });
+  } else {
+    // fallback logic if Background sync is not supported by browser
+    sendData();
   }
 });
