@@ -167,9 +167,34 @@ form.addEventListener('submit', (event) => {
   event.preventDefault();
 
   if (titleInput.value.trim() === '' || locationInput.value.trim() === '') {
+    alert('Please enter valid data!');
     return;
   }
 
   // close modal
   closeCreatePostModal();
+
+  /*
+    SyncManager is basically the API through which we use the background synchronization features.
+    check first if the browser supports 'SyncManager' and 'serviceWorker'
+  */
+  if ('serviceWorker' in navigator && 'SyncManager' in window) {
+    /* 
+      Make sure that serviceWorker has been configured, installed and activated
+      and that it is ready to take some input.
+      The reason why we are doing it here and not in Service Worker is 
+      because the event which triggers the background synchronization set up happens in the feed.js file. 
+      We can't listen to that event in the service worker because we can't listen to the form submission there.
+      So this is the way we get access to service worker from normal javascript file.
+    */
+    navigator.serviceWorker.ready().then((sw) => {
+      /*
+        Register a synchronization task with the service worker.
+        The input is an ID, a tag we can use to clearly identify a given synchronization task.
+        We'll later use that in the service worker to react to re-established connectivity 
+        and check which outstanding tasks we have and then we can use the tag to find out what we need to do with the task.
+      */
+      sw.sync.register('sync-new-post');
+    });
+  }
 });
