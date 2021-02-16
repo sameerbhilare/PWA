@@ -177,7 +177,7 @@ function sendData() {
       image:
         'https://firebasestorage.googleapis.com/v0/b/pwa-gram-bcf78.appspot.com/o/sf-boat.jpg?alt=media&token=5347a729-2874-4746-a2bd-2fd211a3a587', // dummy right now
     }),
-  }).then((response) => {
+  }).then((res) => {
     console.log('Sent data', res);
     // reload page
     updateUI();
@@ -209,7 +209,7 @@ form.addEventListener('submit', (event) => {
       We can't listen to that event in the service worker because we can't listen to the form submission there.
       So this is the way we get access to service worker from normal javascript file.
     */
-    navigator.serviceWorker.ready().then((sw) => {
+    navigator.serviceWorker.ready.then((sw) => {
       // wrap the data you want to sync
       var post = {
         id: new Date().toISOString(), // unique id
@@ -222,12 +222,12 @@ form.addEventListener('submit', (event) => {
       writeData('sync-posts', post)
         .then(() => {
           /*
-          Register a synchronization task with the service worker.
+          Register a synchronization task with the service worker for a specific 'tag' - here it is 'sync-new-post'.
           The input is an ID, a tag we can use to clearly identify a given synchronization task.
           We'll later use that in the service worker to react to re-established connectivity 
           and check which outstanding tasks we have and then we can use the tag to find out what we need to do with the task.
-        */
-          return sw.sync.register('sync-new-post');
+          */
+          return sw.sync.register('sync-new-posts');
         })
         .then(() => {
           // after succesful background sync registration, show message to user (using material design lib)

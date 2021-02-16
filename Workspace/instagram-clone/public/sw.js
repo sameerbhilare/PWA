@@ -418,3 +418,51 @@ self.addEventListener('fetch', (event) => {
   );
 });
 */
+
+/*
+  'sync' event will be executed whenever the service worker believes it reestablished connectivity 
+  or if the connectivity was always there as soon as a new sync task was registered.
+  So whenever the service worker thinks it has connectivity 
+  and it has an outstanding synchronization task, it will trigger this event.
+*/
+self.addEventListener('sync', (event) => {
+  console.log('[Service Worker] Background Syncing', event);
+  // 'sync-new-post' is the tag registered in the feed.js
+  if (event.tag === 'sync-new-posts') {
+    console.log('[Service Worker] Syncing New Posts');
+    // wait till the task is finished
+    event.waitUntil(
+      readAllData('sync-posts').then((dataArr) => {
+        for (var data of dataArr) {
+          // send it to server
+          fetch(
+            'https://pwa-gram-bcf78-default-rtdb.europe-west1.firebasedatabase.app/posts.json',
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+              },
+              body: JSON.stringify({
+                id: data.id, // unique id
+                title: data.title,
+                location: data.location,
+                image:
+                  'https://firebasestorage.googleapis.com/v0/b/pwa-gram-bcf78.appspot.com/o/sf-boat.jpg?alt=media&token=5347a729-2874-4746-a2bd-2fd211a3a587', // dummy right now
+              }),
+            }
+          )
+            .then((response) => {
+              // once we successfully sent the data, we should delete it from the indexedDB
+              if (response.ok) {
+                deleteItemFromData('sync-posts', data.id);
+              }
+            })
+            .catch((err) => {
+              console.log('Error while syncing data.', err);
+            });
+        }
+      })
+    );
+  }
+});
