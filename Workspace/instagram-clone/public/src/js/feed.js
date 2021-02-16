@@ -188,13 +188,34 @@ form.addEventListener('submit', (event) => {
       So this is the way we get access to service worker from normal javascript file.
     */
     navigator.serviceWorker.ready().then((sw) => {
-      /*
-        Register a synchronization task with the service worker.
-        The input is an ID, a tag we can use to clearly identify a given synchronization task.
-        We'll later use that in the service worker to react to re-established connectivity 
-        and check which outstanding tasks we have and then we can use the tag to find out what we need to do with the task.
-      */
-      sw.sync.register('sync-new-post');
+      // wrap the data you want to sync
+      var post = {
+        id: new Date().toISOString(), // unique id
+        title: titleInput.value,
+        location: locationInput.value,
+      };
+
+      // save this data in the indexedDB so that we can fetch it in service worker for background sync
+      // The reason we have to save it in indexedDB like this is SyncManager does not have inbuilt database.
+      writeData('sync-posts', post)
+        .then(() => {
+          /*
+          Register a synchronization task with the service worker.
+          The input is an ID, a tag we can use to clearly identify a given synchronization task.
+          We'll later use that in the service worker to react to re-established connectivity 
+          and check which outstanding tasks we have and then we can use the tag to find out what we need to do with the task.
+        */
+          return sw.sync.register('sync-new-post');
+        })
+        .then(() => {
+          // after succesful background sync registration, show message to user (using material design lib)
+          var snackbarContainer = document.querySelector('#confirmation-toast');
+          var data = { message: 'Your post is saved for synching!' };
+          snackbarContainer.MaterialSnackbar.showSnackbar(data);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     });
   }
 });

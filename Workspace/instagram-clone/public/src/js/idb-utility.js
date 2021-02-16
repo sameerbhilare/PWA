@@ -10,7 +10,15 @@ var dbPromise = idb.open('posts-store', DB_VERSION, (db) => {
   if (!db.objectStoreNames.contains('posts')) {
     // create object store if one does not already exist
     db.createObjectStore('posts', {
-      keyPath: 'id', // primary key
+      keyPath: 'id', // primary key to uniquely identidy each entry
+    });
+  }
+
+  // Store for background sync task
+  if (!db.objectStoreNames.contains('sync-posts')) {
+    // create object store if one does not already exist
+    db.createObjectStore('sync-posts', {
+      keyPath: 'id', // primary key to uniquely identidy each entry
     });
   }
 });
