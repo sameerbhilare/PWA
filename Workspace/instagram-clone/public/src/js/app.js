@@ -1,3 +1,6 @@
+var deferredPrompt;
+var enableNotificationsButtons = document.querySelectorAll('.enable-notifications');
+
 // check if browser supports Promise, if not then use promise.js polyfill
 if (!window.Promise) {
   window.Promise = Promise; // this 'Promise' is from promise.js polyfill
@@ -30,7 +33,6 @@ if ('serviceWorker' in navigator) {
   This event is fired by Chrome right before it's about to show that install banner.
 */
 // 'beforeinstallprompt' event
-var deferredPrompt;
 window.addEventListener('beforeinstallprompt', (event) => {
   console.log('beforeinstallprompt fired ...', event);
   // Prevent the mini-infobar from appearing on mobile
@@ -42,6 +44,38 @@ window.addEventListener('beforeinstallprompt', (event) => {
   // don't do anything.
   return false;
 });
+
+/*
+  Show 'Enable Notifications' button if browser supports it.
+*/
+if ('Notification' in window) {
+  for (var i = 0; i < enableNotificationsButtons.length; i++) {
+    enableNotificationsButtons[i].style.display = 'inline-block';
+    enableNotificationsButtons[i].addEventListener('click', askForNotificationPermission);
+  }
+}
+
+/*
+  Theoretically if we want to display a notification, the browser will automatically prompt the user.
+  But it's better if we do it manually which allows us to handle the user response 
+  and of course control when we in the end ask for it.
+
+  If the user block permissions, we can't even ask again. 
+  If it permission requested is just undecided and user closed the tab or something like that, 
+  he'll get asked next time again but nothing more we can do.
+  So we should try to pick the best possible point of time for asking the permission.
+*/
+function askForNotificationPermission() {
+  Notification.requestPermission((result) => {
+    console.log('User Choice', result);
+    if (result !== 'granted') {
+      console.log('No Notification Permission granted!');
+    } else {
+      // we are good to display notifications :)
+      // You can hide the 'Enable Notifications' button if you want.
+    }
+  });
+}
 
 /*
 // ===========================
