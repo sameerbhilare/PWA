@@ -80,14 +80,24 @@ function askForNotificationPermission() {
 
 // function to display a notification
 function displayConfirmNotification() {
-  // to show the notification
-  // simple notification
-  new Notification('You have successfully subscribed! :)');
-  // Notification with a body
   var options = {
     body: 'You have successfully subscribed to our Notification Service. Thank you.',
   };
+  // to show the notification via normal JavaScript
+  /*
+  // 1. simple notification
+  new Notification('You have successfully subscribed! :)');
+  // 2. Notification with a body
   new Notification('You have successfully subscribed! :)', options);
+  */
+
+  // Show notifications via Service Worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.ready.then((swReg) => {
+      // getting access to the active service worker
+      swReg.showNotification('You have successfully subscribed! (From SW)', options);
+    });
+  }
 }
 
 /*
