@@ -73,8 +73,21 @@ function askForNotificationPermission() {
     } else {
       // we are good to display notifications :)
       // You can hide the 'Enable Notifications' button if you want.
+      displayConfirmNotification();
     }
   });
+}
+
+// function to display a notification
+function displayConfirmNotification() {
+  // to show the notification
+  // simple notification
+  new Notification('You have successfully subscribed! :)');
+  // Notification with a body
+  var options = {
+    body: 'You have successfully subscribed to our Notification Service. Thank you.',
+  };
+  new Notification('You have successfully subscribed! :)', options);
 }
 
 /*
