@@ -81,7 +81,34 @@ function askForNotificationPermission() {
 // function to display a notification
 function displayConfirmNotification() {
   var options = {
-    body: 'You have successfully subscribed to our Notification Service. Thank you.',
+    body: 'You have successfully subscribed to our Notification Service. Thank you.', // body
+    icon: '/src/images/icons/app-icon-96x96.png', // to display icon in our notification
+    image: '/src/images/sf-boat.jpg', // an image - this will be part of the content
+    dir: 'ltr',
+    lang: 'en-US', // bcp47 compliant language code
+    /* To specify your own vibration pattern for this notification (if supported by device)
+       to be clear about how it should vibrate.
+       [100, 50, 200] vibrate for 100 ms, pause for 50ms and vibrate again for 200ms */
+    vibrate: [100, 50, 200],
+    /* badge is what's showing up in the notification bar. Available for Android.
+       The cool thing is you can pass a normal icon, you don't have to create a black and white one 
+       and Android will automatically mask it for you.
+       For desktop chrome, it will be displayed at the top left corner just before your app name.
+    */
+    badge: '/src/images/icons/app-icon-96x96.png', // recommended resolution by Google for Android.
+    tag: 'confirm-notification', // to assign a tag to your notification.
+    /* renotify if set to true makes sure that even if you use the same tag, 
+       a new notification will still vibrate and alert the user. 
+       If it's set to false and you use the same tag on notifications, 
+       new notifications of the same tag actually won't vibrate the phone again 
+       and won't notify the user again. Renotify is used along with tag.
+    */
+    renotify: true,
+    // actions - are the buttons displayed next to your notification. We can also listen to these actions.
+    actions: [
+      { action: 'confirm', title: 'Okay', icon: '/src/images/icons/app-icon-96x96.png' },
+      { action: 'cancel', title: 'Cancel', icon: '/src/images/icons/app-icon-96x96.png' },
+    ],
   };
   // to show the notification via normal JavaScript
   /*
@@ -95,7 +122,7 @@ function displayConfirmNotification() {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.ready.then((swReg) => {
       // getting access to the active service worker
-      swReg.showNotification('You have successfully subscribed! (From SW)', options);
+      swReg.showNotification('You have successfully subscribed!', options); // title and options
     });
   }
 }
