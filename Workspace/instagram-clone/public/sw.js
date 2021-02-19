@@ -466,3 +466,32 @@ self.addEventListener('sync', (event) => {
     );
   }
 });
+
+/*
+  The interaction/actions with the notification happens only in the Service Worker. 
+  This is because a notification is a system feature. 
+  It's not displayed in our web application, it's not HTML or something like that, 
+  it's displayed by the operating system. 
+  Hence the user may interact with it when our page isn't even opened. 
+  Infact this is something service workers are about, they run in the background 
+  and for example when using Chrome on Android, 
+  you will get notifications even if your application is closed, even if the browser is closed.
+
+  'notificationclick' is executed whenever the user clicks on some notification thrown by this service worker.
+*/
+self.addEventListener('notificationclick', (event) => {
+  // find out which notification and action was clicked.
+  var notification = event.notification;
+  var action = event.action;
+
+  // we can open a specific page in our application when the user clicks on a notification
+  console.log(notification);
+  if (action === 'confirm') {
+    // 'confirm' action is set in the displayConfirmNotification() by us.
+    console.log('Confirm was clicked.');
+    notification.close(); // close the notification
+  } else {
+    console.log(action);
+    notification.close(); // close the notification
+  }
+});
