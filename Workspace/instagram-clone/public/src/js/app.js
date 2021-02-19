@@ -48,7 +48,7 @@ window.addEventListener('beforeinstallprompt', (event) => {
 /*
   Show 'Enable Notifications' button if browser supports it.
 */
-if ('Notification' in window) {
+if ('Notification' in window && 'serviceWorker' in navigator) {
   for (var i = 0; i < enableNotificationsButtons.length; i++) {
     enableNotificationsButtons[i].style.display = 'inline-block';
     enableNotificationsButtons[i].addEventListener('click', askForNotificationPermission);
@@ -73,9 +73,38 @@ function askForNotificationPermission() {
     } else {
       // we are good to display notifications :)
       // You can hide the 'Enable Notifications' button if you want.
-      displayConfirmNotification();
+      // displayConfirmNotification(); // just for testing here
+
+      // configure push subscriptions
+      configurePushSub();
     }
   });
+}
+
+// configure push subscriptions
+function configurePushSub() {
+  // always check for feature availability
+  if (!('serviceWorker' in navigator)) {
+  }
+
+  /*
+    subscriptions are managed by the service worker 
+    because it's the service worker which is also responsible for reacting to push messages later on.
+    A subscription is a combination of browser and device.
+  */
+  navigator.serviceWorker.ready
+    .then((swReg) => {
+      // access the push manager and check for existing subscriptions.
+      // Does THIS service worker handled through THIS browser have an existing subscription for THIS device?
+      return swReg.pushManager.getSubscription(); // checks internlly and returns a promise
+    })
+    .then((sub) => {
+      if (sub === null) {
+        // create new subscription
+      } else {
+        // we have a subscription
+      }
+    });
 }
 
 // function to display a notification
