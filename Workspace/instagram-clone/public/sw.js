@@ -480,6 +480,7 @@ self.addEventListener('sync', (event) => {
   'notificationclick' is executed whenever the user clicks on some notification thrown by this service worker.
 */
 self.addEventListener('notificationclick', (event) => {
+  console.log('[Service Worker] notificationclick', event);
   // find out which notification and action was clicked.
   var notification = event.notification;
   var action = event.action;
@@ -507,12 +508,19 @@ self.addEventListener('notificationclick', (event) => {
           return c.visibilityState === 'visible';
         });
 
+        var openUrl = '/';
+        // 'data' passed from server -> to 'push' event handler below
+        // -> to the notification itself -> then accessed here in notificationclick event
+        if (notification.data?.openUrl) {
+          openUrl = notification.data.openUrl;
+        }
+
         if (client) {
-          client.navigate('http://localhost:8080'); // the url to navigate to
+          client.navigate(openUrl); // the url to navigate to,
           client.focus();
         } else {
-          // if not found, open new window using 'clients' object
-          clients.openWindow('http://localhost:8080');
+          // -> to the notification itself -> then accessed here in notificationclick event
+          clients.openWindow(openUrl);
         }
 
         // close the notification
@@ -529,7 +537,7 @@ self.addEventListener('notificationclick', (event) => {
    So You basically don't interact with it, you don't click on it, you just close it.
 */
 self.addEventListener('notificationclose', (event) => {
-  console.log('Notification was closed.', event);
+  console.log('[Service Worker] notificationclose', event);
 });
 
 /*
@@ -547,11 +555,11 @@ self.addEventListener('notificationclose', (event) => {
   That's the reason why if you unregister a service worker, you won't get it.
 */
 self.addEventListener('push', (event) => {
-  console.log('Push Notification received.', event);
+  console.log('[Service Worker] Push Notification received', event);
 
   // retrieve any data which was sent with the push message.
   // if data not found, use a fallback
-  var data = { title: 'New!', content: 'Something new happened!' };
+  var data = { title: 'New!', content: 'Something new happened!', openUrl: '/' };
   if (event.data) {
     data = JSON.parse(event.data.text());
   }
@@ -573,6 +581,13 @@ self.addEventListener('push', (event) => {
        For desktop chrome, it will be displayed at the top left corner just before your app name.
     */
     badge: '/src/images/icons/app-icon-96x96.png', // recommended resolution by Google for Android.
+    /* The data option is a useful option to pass some extra metadata, 
+       data you can later use upon interaction with your notification to the notification 
+       and you could pass any data you want, as many properties as you want. 
+       Then we can access this in the notification. */
+    data: {
+      url: data.openUrl,
+    },
   };
 
   /*
