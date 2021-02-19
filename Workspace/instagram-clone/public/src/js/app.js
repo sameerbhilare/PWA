@@ -101,6 +101,7 @@ function configurePushSub() {
       return swReg.pushManager.getSubscription(); // checks internlly and returns a promise
     })
     .then((sub) => {
+      console.log('Existing sub', sub);
       if (sub === null) {
         // create new subscription
         /*
@@ -115,14 +116,42 @@ function configurePushSub() {
 
           Now to identify our own application server, passing just the IP or something like that certainly isn't enough 
           because that's easy to trick and not really secure.
-          So for that we can use VAPID
+          So for that we can use VAPID.
+          We use vapid keys to protect our push messages and make sure we only send them from our application server and no one else can send them.
         */
-        reg.pushManager.subscribe({
+        var vapidPublicKey =
+          'BA8Vh7nGbKi85yoYWtcj6D5BxDhoeLl4wlphcuwo7JGAFKE7DW8EtPL7SrGOW7geIl_T0YYt4m7JCM4ZYyOuTX8';
+        var convertedVapidPublicKey = urlBase64ToUint8Array(vapidPublicKey);
+        return reg.pushManager.subscribe({
           userVisibleOnly: true, // push notifications sent through our service are only visible to this user.
+          applicationServerKey: convertedVapidPublicKey,
         });
       } else {
         // we have a subscription
       }
+    })
+    .then((newSub) => {
+      console.log(newSub);
+      // store the subscription on the server
+      return fetch(
+        'https://pwa-gram-bcf78-default-rtdb.europe-west1.firebasedatabase.app/subscriptions.json',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify(newSub),
+        }
+      );
+    })
+    .then((response) => {
+      if (response.ok) {
+        displayConfirmNotification();
+      }
+    })
+    .catch((err) => {
+      console.log(err);
     });
 }
 
