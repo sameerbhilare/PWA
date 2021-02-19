@@ -92,8 +92,10 @@ function configurePushSub() {
     because it's the service worker which is also responsible for reacting to push messages later on.
     A subscription is a combination of browser and device.
   */
+  var reg;
   navigator.serviceWorker.ready
     .then((swReg) => {
+      reg = swReg;
       // access the push manager and check for existing subscriptions.
       // Does THIS service worker handled through THIS browser have an existing subscription for THIS device?
       return swReg.pushManager.getSubscription(); // checks internlly and returns a promise
@@ -101,6 +103,23 @@ function configurePushSub() {
     .then((sub) => {
       if (sub === null) {
         // create new subscription
+        /*
+          This create a new subscription for the given browser on this device.
+          If we have an existing subscription, it will render the old one useless.
+          A subscription contains the endpoint of that browser vendor server to which we push our push messages,
+          anyone with this endpoint can send messages to that server and this server will forward them to our web app.
+
+          The security mechanism is that we will identify our own application server / our own back-end server 
+          as the only valid source sending you push messages, 
+          so that anyone else sending push messages to the API endpoint by the browser vendor server will simply not get through.          
+
+          Now to identify our own application server, passing just the IP or something like that certainly isn't enough 
+          because that's easy to trick and not really secure.
+          So for that we can use VAPID
+        */
+        reg.pushManager.subscribe({
+          userVisibleOnly: true, // push notifications sent through our service are only visible to this user.
+        });
       } else {
         // we have a subscription
       }
