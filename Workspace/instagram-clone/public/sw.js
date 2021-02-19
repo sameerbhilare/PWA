@@ -495,3 +495,14 @@ self.addEventListener('notificationclick', (event) => {
     notification.close(); // close the notification
   }
 });
+
+/*
+   Listen to the user closing a notification.
+   close basically means that for example on Android or on any phone, you just swipe it away 
+   or click the X or you close all notifications.
+   On Mac there is a close button. 
+   So You basically don't interact with it, you don't click on it, you just close it.
+*/
+self.addEventListener('notificationclose', (event) => {
+  console.log('Notification was closed.', event);
+});
