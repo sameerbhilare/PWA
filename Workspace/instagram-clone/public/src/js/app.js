@@ -132,18 +132,20 @@ function configurePushSub() {
     })
     .then((newSub) => {
       console.log(newSub);
-      // store the subscription on the server
-      return fetch(
-        'https://pwa-gram-bcf78-default-rtdb.europe-west1.firebasedatabase.app/subscriptions.json',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-          body: JSON.stringify(newSub),
-        }
-      );
+      if (newSub) {
+        // store the subscription on the server
+        return fetch(
+          'https://pwa-gram-bcf78-default-rtdb.europe-west1.firebasedatabase.app/subscriptions.json',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+            },
+            body: JSON.stringify(newSub),
+          }
+        );
+      }
     })
     .then((response) => {
       if (response.ok) {

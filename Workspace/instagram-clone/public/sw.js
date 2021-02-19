@@ -24,7 +24,7 @@
 importScripts('/src/js/idb.js');
 importScripts('/src/js/idb-utility.js'); // sequence matters as we need 'idb' first
 
-var CACHE_STATIC_NAME = 'static-v5';
+var CACHE_STATIC_NAME = 'static-v1';
 var CACHE_DYNAMIC_NAME = 'dynamic-v3';
 var MAX_ITEMS_IN_DYNAMIC_CACHE = 20;
 
@@ -492,7 +492,32 @@ self.addEventListener('notificationclick', (event) => {
     notification.close(); // close the notification
   } else {
     console.log(action);
-    notification.close(); // close the notification
+    /*
+      This should basically ensure that if we tap the notification, 
+      we either load our application in a tab the user already had open, to not unnecessarily open a new one 
+      or if the user didn't have our application open, maybe the whole browser was closed,
+      we open a new tab, maybe even a new browser window with our application loaded.
+    */
+    // 'clients' refers to all windows or all browser tasks related to this service worker.
+    clients
+      .matchAll() // to get access to all
+      .then((clientsArr) => {
+        var client = clientsArr.find((c) => {
+          // this means we have open browser window
+          return c.visibilityState === 'visible';
+        });
+
+        if (client) {
+          client.navigate('http://localhost:8080'); // the url to navigate to
+          client.focus();
+        } else {
+          // if not found, open new window using 'clients' object
+          clients.openWindow('http://localhost:8080');
+        }
+
+        // close the notification
+        notification.close();
+      });
   }
 });
 
@@ -505,4 +530,57 @@ self.addEventListener('notificationclick', (event) => {
 */
 self.addEventListener('notificationclose', (event) => {
   console.log('Notification was closed.', event);
+});
+
+/*
+  Listen to Push Messages
+  The service worker is always running in the background at least on some devices 
+  and we want to react to push messages when we don't have a web page open. 
+  So the service worker is only place where we can listen to them.
+
+  When do we get an incoming push message?
+  Well if this service worker on this browser on this device has a subscription 
+  to which this push message was sent.
+  Each subscription is stored on the server and has its own endpoint 
+  and therefore if we send a push message from the server to that subscription, 
+  this service worker who created that subscription will receive it. 
+  That's the reason why if you unregister a service worker, you won't get it.
+*/
+self.addEventListener('push', (event) => {
+  console.log('Push Notification received.', event);
+
+  // retrieve any data which was sent with the push message.
+  // if data not found, use a fallback
+  var data = { title: 'New!', content: 'Something new happened!' };
+  if (event.data) {
+    data = JSON.parse(event.data.text());
+  }
+
+  // show notification using this data
+  var options = {
+    body: data.content,
+    icon: '/src/images/icons/app-icon-96x96.png', // to display icon in our notification
+    image: '/src/images/sf-boat.jpg', // an image - this will be part of the content
+    dir: 'ltr',
+    lang: 'en-US', // bcp47 compliant language code
+    /* To specify your own vibration pattern for this notification (if supported by device)
+       to be clear about how it should vibrate.
+       [100, 50, 200] vibrate for 100 ms, pause for 50ms and vibrate again for 200ms */
+    vibrate: [100, 50, 200],
+    /* badge is what's showing up in the notification bar. Available for Android.
+       The cool thing is you can pass a normal icon, you don't have to create a black and white one 
+       and Android will automatically mask it for you.
+       For desktop chrome, it will be displayed at the top left corner just before your app name.
+    */
+    badge: '/src/images/icons/app-icon-96x96.png', // recommended resolution by Google for Android.
+  };
+
+  /*
+    The active service worker itself can't show the notification, 
+    it's there to listen to events it's running in the background.
+    That's why we have to get access to the registration of the service worker, 
+    that is the part running in the browser.
+    So it's the part which connects the service worker to the browser.
+  */
+  event.waitUntil(self.registration.showNotification(data.title, options));
 });
