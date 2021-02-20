@@ -5,6 +5,15 @@ var sharedMomentsArea = document.querySelector('#shared-moments');
 var form = document.querySelector('form');
 var titleInput = document.querySelector('#title');
 var locationInput = document.querySelector('#location');
+var videoPlayer = document.querySelector('#player');
+var canvasEle = document.querySelector('#canvas');
+var captureBtn = document.querySelector('#capture-btn');
+var imagePicker = document.querySelector('#image-picker');
+var imagePickerArea = document.querySelector('#pick-image');
+
+// initialize the camera or the image picker depending on the features the given device supports.
+// enable the camera in a progressive way, that it works on as many devices as possible
+function initializeMedia() {}
 
 function openCreatePostModal() {
   // createPostArea.style.display = 'block';
@@ -12,6 +21,7 @@ function openCreatePostModal() {
   // setTimeout(() => {
   createPostArea.style.transform = 'translateY(0)';
   // }, 1);
+  initializeMedia();
   // deferredPrompt is set in app.js
   if (deferredPrompt) {
     // show the App install banner.
