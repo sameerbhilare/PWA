@@ -10,6 +10,7 @@ var canvasEle = document.querySelector('#canvas');
 var captureBtn = document.querySelector('#capture-btn');
 var imagePicker = document.querySelector('#image-picker');
 var imagePickerArea = document.querySelector('#pick-image');
+var picture;
 
 // initialize the camera or the image picker depending on the features the given device supports.
 // enable the camera in a progressive way, that it works on as many devices as possible
@@ -96,6 +97,15 @@ captureBtn.addEventListener('click', (event) => {
   videoPlayer.srcObject.getVideoTracks().forEach((track) => {
     track.stop(); // stop each track. there will be only one in our case
   });
+
+  /*
+    Now The image in the canvas happens to be a base64 URL. 
+    Theoretically we could upload that and store it in the database 
+    but storing such long strings which are quite big in a size perspective too isn't really what you should do 
+    in a database, instead we should store files on your file server.
+    So we need to convert the canvas base 64 URL to a blob.
+  */
+  picture = dataURItoBlob(canvasEle.toDataURL()); // toDataURL() gives base64 representation of the canvas image
 });
 
 function openCreatePostModal() {
@@ -261,19 +271,16 @@ if ('indexedDB' in window) {
 
 // fallback logic if Background sync is not supported by browser
 function sendData() {
+  var id = new Date().toISOString();
+  var postData = new FormData(); // allows us to send form data to a back-end
+  postData.append('id', id);
+  postData.append('title', titleInput.value);
+  postData.append('location', locationInput.value);
+  postData.append('file', picture, id + '.png'); // image taken by the camera will be a png
+
   fetch('https://pwa-gram-bcf78-default-rtdb.europe-west1.firebasedatabase.app/posts.json', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-    body: JSON.stringify({
-      id: new Date().toISOString(), // unique id
-      title: titleInput.value,
-      location: locationInput.value,
-      image:
-        'https://firebasestorage.googleapis.com/v0/b/pwa-gram-bcf78.appspot.com/o/sf-boat.jpg?alt=media&token=5347a729-2874-4746-a2bd-2fd211a3a587', // dummy right now
-    }),
+    body: postData,
   }).then((res) => {
     console.log('Sent data', res);
     // reload page
@@ -312,6 +319,7 @@ form.addEventListener('submit', (event) => {
         id: new Date().toISOString(), // unique id
         title: titleInput.value,
         location: locationInput.value,
+        picture: picture,
       };
 
       // save this data in the indexedDB so that we can fetch it in service worker for background sync

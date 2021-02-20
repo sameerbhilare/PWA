@@ -434,22 +434,18 @@ self.addEventListener('sync', (event) => {
     event.waitUntil(
       readAllData('sync-posts').then((dataArr) => {
         for (var data of dataArr) {
+          var postData = new FormData(); // allows us to send form data to a back-end
+          postData.append('id', data.id);
+          postData.append('title', data.title);
+          postData.append('location', data.location);
+          postData.append('file', data.picture, data.id + '.png'); // image taken by the camera will be a png
+
           // send it to server
           fetch(
             'https://pwa-gram-bcf78-default-rtdb.europe-west1.firebasedatabase.app/posts.json',
             {
               method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Accept: 'application/json',
-              },
-              body: JSON.stringify({
-                id: data.id, // unique id
-                title: data.title,
-                location: data.location,
-                image:
-                  'https://firebasestorage.googleapis.com/v0/b/pwa-gram-bcf78.appspot.com/o/sf-boat.jpg?alt=media&token=5347a729-2874-4746-a2bd-2fd211a3a587', // dummy right now
-              }),
+              body: postData,
             }
           )
             .then((response) => {
