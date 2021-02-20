@@ -25,7 +25,7 @@ function initializeMedia() {
 
   if (!('getUserMedia' in navigator.mediaDevices)) {
     /* 
-     rebuilding the native get user media function
+     Polyfill/rebuilding the native get user media function
      if not supported, take advantage of older camera access implementations we used in the past.
      'constraints' means whether its audio or video.
      Actually some older or other browsers have their own native implementations 
@@ -46,6 +46,21 @@ function initializeMedia() {
       });
     };
   }
+
+  // at this point we have access to the getUserMedia API
+  // Try to get access to the video on that device. So browser will ask for permission
+  // if access granted, then then() block will be called, else catch() block will be called.
+  navigator.mediaDevices
+    .getUserMedia({ video: true, audio: false })
+    .then((stream) => {
+      // 'stream' is video stream. Pass it onto our video DOM element
+      videoPlayer.srcObject = stream;
+      videoPlayer.style.display = 'block';
+    })
+    .catch((err) => {
+      // show fallback impage picker
+      imagePickerArea.style.display = 'block';
+    });
 }
 
 function openCreatePostModal() {
@@ -92,6 +107,10 @@ function unregisterServiceWorker() {
 function closeCreatePostModal() {
   createPostArea.style.transform = 'translateY(100vh)';
   // createPostArea.style.display = 'none';
+  // cleanup
+  imagePickerArea.style.display = 'none';
+  videoPlayer.style.display = 'none';
+  canvasEle.style.display = 'none';
 }
 
 shareImageButton.addEventListener('click', openCreatePostModal);
