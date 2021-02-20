@@ -13,7 +13,40 @@ var imagePickerArea = document.querySelector('#pick-image');
 
 // initialize the camera or the image picker depending on the features the given device supports.
 // enable the camera in a progressive way, that it works on as many devices as possible
-function initializeMedia() {}
+function initializeMedia() {
+  /*
+    Media devices is the API which gives us access to the device camera and also to the microphone.
+    So all the media input a device can generate and that typically is audio or video, video includes images.
+  */
+  if (!('mediaDevices' in navigator)) {
+    // if not supported, create a kind of polyfill to extend the support
+    navigator.mediaDevices = {};
+  }
+
+  if (!('getUserMedia' in navigator.mediaDevices)) {
+    /* 
+     rebuilding the native get user media function
+     if not supported, take advantage of older camera access implementations we used in the past.
+     'constraints' means whether its audio or video.
+     Actually some older or other browsers have their own native implementations 
+     which pretty much do the same and we can bind them to this modern syntax 
+     so that in the rest of our application, we can only use that modern syntax.
+    */
+    navigator.mediaDevices.getUserMedia = (constraints) => {
+      var getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia; // webkit for safari, moz for mozilla
+
+      if (!getUserMedia) {
+        // return rejected promise because the modern browsers which support getUserMedia return a promise
+        // so our this custom implemention must return a promise.
+        return Promise.reject(new Error('getUserMedia is not implemented.'));
+      }
+
+      return new Promise((resolve, reject) => {
+        getUserMedia.call(navigator, constraints, resolve, reject);
+      });
+    };
+  }
+}
 
 function openCreatePostModal() {
   // createPostArea.style.display = 'block';
