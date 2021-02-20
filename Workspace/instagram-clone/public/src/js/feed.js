@@ -63,6 +63,41 @@ function initializeMedia() {
     });
 }
 
+// capture button click to click a picture
+/*
+  The general idea is we'll get the stream of the video element, basically send it to the canvas
+  and since the canvas is there to display static content, it will automatically take the latest snapshot 
+  and just display that. Then we stop the video player and all we get is a canvas element with the 
+  latest snapshot and we can then extract that simply from that canvas element.
+*/
+captureBtn.addEventListener('click', (event) => {
+  canvasEle.style.display = 'block';
+  videoPlayer.style.display = 'none'; // hide the video player
+  captureBtn.style.display = 'none'; // hide the capture button
+
+  // now get the stream onto the canvas
+  var context = canvasEle.getContext('2d'); // draw 2d on the canvas
+  // 0,0 are starting coordinates, canvas.width is allowed canvas width, height should fit video aspect ratio
+  context.drawImage(
+    videoPlayer, // note stream on the video is still ongoing even if set style.display none
+    0, // starting X coordinate
+    0, // starting Y coordinate
+    canvas.width, // allowed canvas width
+    videoPlayer.videoHeight / (videoPlayer.videoWidth / canvas.width) // height should fit video aspect ratio
+  );
+
+  /*
+    Now stop the stream in the video because otherwise it keeps on going even though we closed it 
+    and if we keep this stream ongoing, the camera will stay on.
+    If camera is on, you might see LED light pointing at you n laptop.
+    So you definitely turn this off to both save resources and not scare your users.
+  */
+  // gives us access to all the running video streams on that element
+  videoPlayer.srcObject.getVideoTracks().forEach((track) => {
+    track.stop(); // stop each track. there will be only one in our case
+  });
+});
+
 function openCreatePostModal() {
   // createPostArea.style.display = 'block';
   // settimeout is just to make css aware that 'display' and 'transform' are 2 different steps
