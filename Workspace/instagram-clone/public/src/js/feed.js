@@ -108,6 +108,10 @@ captureBtn.addEventListener('click', (event) => {
   picture = dataURItoBlob(canvasEle.toDataURL()); // toDataURL() gives base64 representation of the canvas image
 });
 
+imagePicker.addEventListener('change', (event) => {
+  picture = event.target.files[0];
+});
+
 function openCreatePostModal() {
   // createPostArea.style.display = 'block';
   // settimeout is just to make css aware that 'display' and 'transform' are 2 different steps
@@ -170,7 +174,7 @@ function onSaveButtonClicked(event) {
     caches.open('user-requested').then((cache) => {
       // fetch from server and then add the request and response in the cache
       cache.add('https://httpbin.org/get'); // this is what is fetched in the card
-      cache.add('/src/images/sf-boat.jpg'); // this is requested in the card
+      cache.add('/src/images/white-turf-st-moritz.jpg'); // this is requested in the card
     });
   }
 }

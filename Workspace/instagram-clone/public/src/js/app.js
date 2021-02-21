@@ -162,7 +162,7 @@ function displayConfirmNotification() {
   var options = {
     body: 'You have successfully subscribed to our Notification Service. Thank you.', // body
     icon: '/src/images/icons/app-icon-96x96.png', // to display icon in our notification
-    image: '/src/images/sf-boat.jpg', // an image - this will be part of the content
+    image: '/src/images/white-turf-st-moritz.jpg', // an image - this will be part of the content
     dir: 'ltr',
     lang: 'en-US', // bcp47 compliant language code
     /* To specify your own vibration pattern for this notification (if supported by device)

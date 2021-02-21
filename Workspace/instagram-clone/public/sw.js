@@ -24,8 +24,8 @@
 importScripts('/src/js/idb.js');
 importScripts('/src/js/idb-utility.js'); // sequence matters as we need 'idb' first
 
-var CACHE_STATIC_NAME = 'static-v3';
-var CACHE_DYNAMIC_NAME = 'dynamic-v3';
+var CACHE_STATIC_NAME = 'static-v2';
+var CACHE_DYNAMIC_NAME = 'dynamic-v2';
 var MAX_ITEMS_IN_DYNAMIC_CACHE = 20;
 
 var STATIC_FILES = [
@@ -33,6 +33,7 @@ var STATIC_FILES = [
   '/index.html',
   '/offline.html', // this is the default offline fallback page
   '/src/js/app.js',
+  '/src/js/idb-utility.js',
   '/src/js/feed.js',
   '/src/js/idb.js', // to access it offline for easy access.
   '/src/js/material.min.js',
@@ -564,7 +565,7 @@ self.addEventListener('push', (event) => {
   var options = {
     body: data.content,
     icon: '/src/images/icons/app-icon-96x96.png', // to display icon in our notification
-    image: '/src/images/sf-boat.jpg', // an image - this will be part of the content
+    image: '/src/images/white-turf-st-moritz.jpg', // an image - this will be part of the content
     dir: 'ltr',
     lang: 'en-US', // bcp47 compliant language code
     /* To specify your own vibration pattern for this notification (if supported by device)
