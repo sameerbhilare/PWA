@@ -170,9 +170,12 @@ imagePicker.addEventListener('change', (event) => {
 function openCreatePostModal() {
   // createPostArea.style.display = 'block';
   // settimeout is just to make css aware that 'display' and 'transform' are 2 different steps
-  // setTimeout(() => {
-  createPostArea.style.transform = 'translateY(0)';
-  // }, 1);
+  // workaround for smooth animation
+  // this animation wasn't good because closing the video player takes lots of resources
+  setTimeout(() => {
+    createPostArea.style.transform = 'translateY(0)';
+  }, 1);
+
   initializeMedia();
   initializeLocation();
   // deferredPrompt is set in app.js
@@ -210,7 +213,6 @@ function unregisterServiceWorker() {
 }
 
 function closeCreatePostModal() {
-  createPostArea.style.transform = 'translateY(100vh)';
   // createPostArea.style.display = 'none';
   // cleanup
   imagePickerArea.style.display = 'none';
@@ -218,6 +220,25 @@ function closeCreatePostModal() {
   canvasEle.style.display = 'none';
   locationLoader.style.display = 'none';
   locationBtn.style.display = 'inline';
+
+  // stop the camera stream
+  if (videoPlayer.srcObject) {
+    /*
+      Now stop the stream in the video because otherwise it keeps on going even though we closed it 
+      and if we keep this stream ongoing, the camera will stay on.
+      If camera is on, you might see LED light pointing at you n laptop.
+      So you definitely turn this off to both save resources and not scare your users.
+    */
+    // gives us access to all the running video streams on that element
+    videoPlayer.srcObject.getVideoTracks().forEach((track) => {
+      track.stop(); // stop each track. there will be only one in our case
+    });
+  }
+  // workaround for smooth animation
+  // this animation wasn't good because closing the video player takes lots of resources
+  setTimeout(() => {
+    createPostArea.style.transform = 'translateY(100vh)';
+  }, 1);
 }
 
 shareImageButton.addEventListener('click', openCreatePostModal);
