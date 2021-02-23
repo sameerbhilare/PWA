@@ -16,12 +16,14 @@ var picture;
 var locationBtn = document.querySelector('#location-btn');
 var locationLoader = document.querySelector('#location-loader');
 var maualLocationDiv = document.querySelector('#manual-location');
-var fetchedLocation;
+var fetchedLocation = { lat: 0, lng: 0 };
 
 locationBtn.addEventListener('click', (event) => {
   if (!('geolocation' in navigator)) {
     return;
   }
+
+  var sawAlert = false;
 
   // hide the button and show the loader
   locationBtn.style.display = 'none';
@@ -49,8 +51,11 @@ locationBtn.addEventListener('click', (event) => {
       console.log(err);
       locationBtn.style.display = 'inline';
       locationLoader.style.display = 'none';
-      alert('Could not fetch location. Please enter manually!');
-      fetchedLocation = { lat: null, lng: null };
+      if (!sawAlert) {
+        sawAlert = true;
+        alert('Could not fetch location. Please enter manually!');
+      }
+      fetchedLocation = { lat: 0, lng: 0 };
     },
     // options
     {
@@ -220,6 +225,7 @@ function closeCreatePostModal() {
   canvasEle.style.display = 'none';
   locationLoader.style.display = 'none';
   locationBtn.style.display = 'inline';
+  captureBtn.style.display = 'inline';
 
   // stop the camera stream
   if (videoPlayer.srcObject) {

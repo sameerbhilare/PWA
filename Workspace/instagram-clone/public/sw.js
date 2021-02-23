@@ -24,7 +24,7 @@
 importScripts('/src/js/idb.js');
 importScripts('/src/js/idb-utility.js'); // sequence matters as we need 'idb' first
 
-var CACHE_STATIC_NAME = 'static-v2';
+var CACHE_STATIC_NAME = 'static-v3';
 var CACHE_DYNAMIC_NAME = 'dynamic-v2';
 var MAX_ITEMS_IN_DYNAMIC_CACHE = 20;
 
