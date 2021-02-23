@@ -24,7 +24,7 @@
 importScripts('/src/js/idb.js');
 importScripts('/src/js/idb-utility.js'); // sequence matters as we need 'idb' first
 
-var CACHE_STATIC_NAME = 'static-v2';
+var CACHE_STATIC_NAME = 'static-v3';
 var CACHE_DYNAMIC_NAME = 'dynamic-v2';
 var MAX_ITEMS_IN_DYNAMIC_CACHE = 20;
 
@@ -439,6 +439,8 @@ self.addEventListener('sync', (event) => {
           postData.append('id', data.id);
           postData.append('title', data.title);
           postData.append('location', data.location);
+          postData.append('rawLocationLat', data.rawLocation.lat);
+          postData.append('rawLocationLng', data.rawLocation.lng);
           postData.append('file', data.picture, data.id + '.png'); // image taken by the camera will be a png
 
           // send it to server

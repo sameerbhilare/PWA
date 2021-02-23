@@ -5,12 +5,67 @@ var sharedMomentsArea = document.querySelector('#shared-moments');
 var form = document.querySelector('form');
 var titleInput = document.querySelector('#title');
 var locationInput = document.querySelector('#location');
+// camera
 var videoPlayer = document.querySelector('#player');
 var canvasEle = document.querySelector('#canvas');
 var captureBtn = document.querySelector('#capture-btn');
 var imagePicker = document.querySelector('#image-picker');
 var imagePickerArea = document.querySelector('#pick-image');
 var picture;
+// location
+var locationBtn = document.querySelector('#location-btn');
+var locationLoader = document.querySelector('#location-loader');
+var maualLocationDiv = document.querySelector('#manual-location');
+var fetchedLocation;
+
+locationBtn.addEventListener('click', (event) => {
+  if (!('geolocation' in navigator)) {
+    return;
+  }
+
+  // hide the button and show the loader
+  locationBtn.style.display = 'none';
+  locationLoader.style.display = 'inline';
+
+  // get current position
+  // calling getCurrentPosition() will prompt the user to grant permission.
+  // if he denies it, the error callback will be executed.
+  // if he accepts it, we will continue.
+  // and in the future the user will not be prompted again unless he just skip the decision of course.
+  navigator.geolocation.getCurrentPosition(
+    // success callback
+    (position) => {
+      locationBtn.style.display = 'inline';
+      locationLoader.style.display = 'none';
+      console.log(position);
+      // IMP: get both latitude and longitude.
+      // Then yu can use Google Geolocation API to fetch location using these coordinates.
+      fetchedLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
+      locationInput.value = 'In Mahabaleshwar';
+      maualLocationDiv.classList.add('is-focused'); // this is required by the 3rd party library
+    },
+    // error callback
+    (err) => {
+      console.log(err);
+      locationBtn.style.display = 'inline';
+      locationLoader.style.display = 'none';
+      alert('Could not fetch location. Please enter manually!');
+      fetchedLocation = { lat: null, lng: null };
+    },
+    // options
+    {
+      timeout: 7000, // Timeout in ms, allows us to specify how long we try to get a location, a position.
+    }
+  );
+});
+
+function initializeLocation() {
+  // check if browser supports geolocation api
+  if (!('geolocation' in navigator)) {
+    // doesn't support
+    locationBtn.style.display = 'none'; // do not show location button
+  }
+}
 
 // initialize the camera or the image picker depending on the features the given device supports.
 // enable the camera in a progressive way, that it works on as many devices as possible
@@ -119,6 +174,7 @@ function openCreatePostModal() {
   createPostArea.style.transform = 'translateY(0)';
   // }, 1);
   initializeMedia();
+  initializeLocation();
   // deferredPrompt is set in app.js
   if (deferredPrompt) {
     // show the App install banner.
@@ -160,6 +216,8 @@ function closeCreatePostModal() {
   imagePickerArea.style.display = 'none';
   videoPlayer.style.display = 'none';
   canvasEle.style.display = 'none';
+  locationLoader.style.display = 'none';
+  locationBtn.style.display = 'inline';
 }
 
 shareImageButton.addEventListener('click', openCreatePostModal);
@@ -280,6 +338,8 @@ function sendData() {
   postData.append('id', id);
   postData.append('title', titleInput.value);
   postData.append('location', locationInput.value);
+  postData.append('rawLocationLat', fetchedLocation.lat);
+  postData.append('rawLocationLng', fetchedLocation.lng);
   postData.append('file', picture, id + '.png'); // image taken by the camera will be a png
 
   fetch('https://pwa-gram-bcf78-default-rtdb.europe-west1.firebasedatabase.app/posts.json', {
@@ -324,6 +384,7 @@ form.addEventListener('submit', (event) => {
         title: titleInput.value,
         location: locationInput.value,
         picture: picture,
+        rawLocation: fetchedLocation,
       };
 
       // save this data in the indexedDB so that we can fetch it in service worker for background sync
