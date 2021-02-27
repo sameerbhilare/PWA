@@ -500,6 +500,7 @@ self.addEventListener('notificationclick', (event) => {
       .matchAll() // to get access to all
       .then((clientsArr) => {
         var client = clientsArr.find((c) => {
+          console.log('==============', c.visibilityState);
           // this means we have open browser window
           return c.visibilityState === 'visible';
         });
@@ -564,7 +565,7 @@ self.addEventListener('push', (event) => {
   var options = {
     body: data.content,
     icon: '/src/images/icons/app-icon-96x96.png', // to display icon in our notification
-    image: '/src/images/white-turf-st-moritz.jpg', // an image - this will be part of the content
+    image: data.image, //'/src/images/white-turf-st-moritz.jpg', // an image - this will be part of the content
     dir: 'ltr',
     lang: 'en-US', // bcp47 compliant language code
     /* To specify your own vibration pattern for this notification (if supported by device)

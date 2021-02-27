@@ -40,6 +40,8 @@ exports.createPost = (req, res, next) => {
                 JSON.stringify({
                   title: 'No Post!',
                   content: 'New Content Added',
+                  image: createdPost.image,
+                  openUrl: '/help',
                 })
               )
               .catch((error) => {
