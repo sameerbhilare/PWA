@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 const Post = require('../models/post');
+const webPush = require('web-push');
+const Subscription = require('../models/subscription');
 
 exports.createPost = (req, res, next) => {
   const url = req.protocol + '://' + req.get('host');
@@ -14,6 +16,38 @@ exports.createPost = (req, res, next) => {
   post
     .save()
     .then((createdPost) => {
+      // now the web push package has all the information it needs to send a new push request.
+      webPush.setVapidDetails(
+        `mailto:${process.env.EMAIL_ID}`,
+        process.env.WEB_PUSH_PUBLIC_KEY,
+        process.env.WEB_PUSH_PRIVATE_KEY
+      );
+      // send a push request to all our subscriptions.
+      Subscription.find().then((subscriptions) => {
+        if (subscriptions) {
+          subscriptions.forEach((sub) => {
+            const pushConfig = {
+              endpoint: sub.endpoint,
+              keys: {
+                auth: sub.keys.auth,
+                p256dh: sub.keys.p256dh,
+              },
+            };
+            // send actual notification to each subscription
+            webPush
+              .sendNotification(
+                pushConfig,
+                JSON.stringify({
+                  title: 'No Post!',
+                  content: 'New Content Added',
+                })
+              )
+              .catch((error) => {
+                console.log('Error while sending push notification.', error);
+              });
+          });
+        }
+      });
       res.status(201).json({
         message: 'Post added successfully!',
         post: {
