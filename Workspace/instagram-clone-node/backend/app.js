@@ -3,6 +3,7 @@ const path = require('path');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const postRoutes = require('./routes/post-routes');
+const subscriptionRoutes = require('./routes/subscription-routes');
 
 const app = express();
 
@@ -25,6 +26,8 @@ app.use(bodyParser.urlencoded()); // for url encoded body (html form)
 app.use('/', express.static(path.join(__dirname, '../public')));
 
 app.use('/api/posts', postRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
+
 /*
 app.use('/api/posts', (req, res, next) => {
   console.log('posts');
