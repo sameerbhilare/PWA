@@ -220,8 +220,8 @@ self.addEventListener('fetch', (event) => {
             })
             .then((data) => {
               // transform to array
-              for (var key in data) {
-                writeData('posts', data[key]);
+              for (var key in data?.posts) {
+                writeData('posts', data?.posts[key]);
               }
             });
 
