@@ -374,8 +374,10 @@ function sendData() {
     body: postData,
   }).then((res) => {
     console.log('Sent data', res);
-    // reload page
-    updateUI();
+    // convert JS object to array
+    var dataArry = [];
+    dataArry.push(res.post);
+    updateUI(dataArry);
   });
 }
 
