@@ -1,6 +1,0 @@
-{
-  "env": {
-    "DATABASE": "mongodb+srv://mean-user:1K6Hk0S7CykV3cJL@cluster0.zdoxp.mongodb.net/pwa-instaclone?retryWrites=true&w=majority",
-    "JWT_SECRET": "learning-pwa"
-  }
-}
