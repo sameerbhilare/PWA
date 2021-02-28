@@ -4,7 +4,8 @@
   "description": "A complete guide to PWAs. Building a simple Instagram clone.",
   "main": "index.js",
   "scripts": {
-    "start": "http-server -c-1",
+    "start": "node ./backend/server.js",
+    "start:front": "http-server -c-1",
     "web-push": "web-push",
     "start:server": "nodemon ./backend/server.js"
   },
@@ -25,5 +26,8 @@
     "multer": "^1.4.2",
     "web-push": "^3.4.4"
   },
-  "devDependencies": {}
+  "devDependencies": {},
+  "engines": {
+    "node": ">=10.0.0"
+  }
 }
