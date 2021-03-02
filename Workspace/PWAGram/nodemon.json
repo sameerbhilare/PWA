@@ -1,0 +1,8 @@
+{
+    "env": {
+      "DATABASE": "<replaec-with-db-url>",
+      "WEB_PUSH_PUBLIC_KEY": "<webpush-public-key>",
+      "WEB_PUSH_PRIVATE_KEY": "<webpush-private-key>",
+      "EMAIL_ID": "<email_id>"
+    }
+  }
